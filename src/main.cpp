@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#define BUTTON_PIN 4
+#define BUTTON_PIN 0
 
 TaskHandle_t cyclicTaskHandle = NULL;
 TaskHandle_t acyclicTaskHandle = NULL;
@@ -12,8 +12,7 @@ void cyclicTask(void *parameter)
   while (1)
   {
 
-    Serial.print("Student ID: ");
-    Serial.println(MyID);
+    Serial.println("Student ID: " + String(MyID));
     vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }

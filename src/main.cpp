@@ -43,7 +43,7 @@
 // void highPriorityTask(void *pv) {
 //   while (1) {
 //     Serial.println("High Priority Task running");
-//     vTaskDelay(pdMS_TO_TICKS(1000)); // blocks → allows low to run
+//     vTaskDelay(pdMS_TO_TICKS(1000));
 //   }
 // }
 
@@ -97,7 +97,6 @@ void setup()
 volatile uint32_t idleCounter = 0;
 uint32_t lastMillis = 0;
 
-// Idle hook function
 extern "C" void vApplicationIdleHook(void)
 {
   idleCounter++;
@@ -106,20 +105,18 @@ extern "C" void vApplicationIdleHook(void)
 void setup()
 {
   Serial.begin(115200);
-  // Enable idle hook in FreeRTOSConfig.h:
-  // #define configUSE_IDLE_HOOK 1
 }
 
 void loop()
 {
-  vTaskDelay(pdMS_TO_TICKS(1000)); // every second
+  vTaskDelay(pdMS_TO_TICKS(1000));
   uint32_t now = millis();
   static uint32_t lastCount = 0;
 
   uint32_t deltaCount = idleCounter - lastCount;
   lastCount = idleCounter;
 
-  float cpuIdlePercent = (deltaCount / 10000.0) * 100; // scale factor (tune empirically)
+  float cpuIdlePercent = (deltaCount / 10000.0) * 100;
   float cpuUsage = 100.0 - cpuIdlePercent;
 
   Serial.printf("CPU Usage: %.2f%%\n", cpuUsage);

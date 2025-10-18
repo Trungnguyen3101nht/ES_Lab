@@ -1,17 +1,6 @@
 #include <Arduino.h>
 
 // Prioritized Pre-emptive Scheduling with Time Slicing.///
-//  void setup()
-//  {
-//    Serial.begin(115200);
-//    Serial.println("Hello, world!");
-//  }
-
-// void loop()
-// {
-//   Serial.println("Hello, world!");
-// }
-// #include <Arduino.h>
 
 // TaskHandle_t Task1, Task2;
 
@@ -36,7 +25,7 @@
 //   xTaskCreate(task1, "Task1", 2048, NULL, 1, &Task1);
 //   xTaskCreate(task2, "Task2", 2048, NULL, 1, &Task2);
 // }
-
+//-----------------------------------------------------------------------------
 // Prioritized Pre-emptive Scheduling without Time Slicing. ///
 // #define configUSE_TIME_SLICING 0
 
@@ -65,33 +54,33 @@
 // {
 //   // Empty loop
 // }
-
+//-----------------------------------------------------------------------------
 // Co-operative Scheduling
-void coopTask1(void *pv)
-{
-  while (1)
-  {
-    Serial.println("Task 1 doing work...");
-    taskYIELD();
-  }
-}
+// void coopTask1(void *pv)
+// {
+//   while (1)
+//   {
+//     Serial.println("Task run...");
+//     taskYIELD();
+//   }
+// }
 
-void coopTask2(void *pv)
-{
-  while (1)
-  {
-    Serial.println("Task 2 doing work...");
-    taskYIELD();
-  }
-}
+// void coopTask2(void *pv)
+// {
+//   while (1)
+//   {
+//     Serial.println("Task 2 run...");
+//     taskYIELD();
+//   }
+// }
 
-void setup()
-{
-  Serial.begin(115200);
-  xTaskCreate(coopTask1, "Coop1", 2048, NULL, 1, NULL);
-  xTaskCreate(coopTask2, "Coop2", 2048, NULL, 1, NULL);
-}
-
+// void setup()
+// {
+//   Serial.begin(115200);
+//   xTaskCreate(coopTask1, "Coop1", 2048, NULL, 1, NULL);
+//   xTaskCreate(coopTask2, "Coop2", 2048, NULL, 1, NULL);
+// }
+//-----------------------------------------------------------------------------
 // extra exercise
 
 volatile uint32_t idleCounter = 0;

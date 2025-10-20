@@ -1,0 +1,92 @@
+:root {
+  --bg-color: #121212;
+  --card-color: #1e1e1e;
+  --accent: #00bcd4;
+  --text-color: #f5f5f5;
+  --off-color: #555;
+}
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.container {
+  background: var(--card-color);
+  padding: 40px 60px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  transition: 0.3s;
+}
+
+h1 {
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.switch-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Switch toggle styling */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 80px;
+  height: 40px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--off-color);
+  transition: 0.4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 28px;
+  width: 28px;
+  left: 6px;
+  bottom: 6px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+
+input:checked + .slider:before {
+  transform: translateX(40px);
+}
+
+#status {
+  font-size: 1.2rem;
+  margin-top: 10px;
+  color: var(--accent);
+}

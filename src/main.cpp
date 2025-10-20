@@ -1,180 +1,86 @@
-
 #include "global.h"
 
-// Định nghĩa loại yêu cầu
-typedef enum
-{
-  REQ_LED = 1,
-  REQ_SENSOR,
-  REQ_PRINT,
-  REQ_UNKNOWN
-} RequestType;
+// WiFi credentials
+const char *ssid = "ACLAB";
+const char *password = "ACLAB2023";
 
-// Cấu trúc request
-typedef struct
-{
-  RequestType type;
-  char data[64];
-} Request;
+// FreeRTOS handles
+TaskHandle_t TaskWebServerHandle;
+TaskHandle_t TaskGPIOHandle;
 
-// Hàng đợi chung
-static QueueHandle_t requestQueue;
+// Shared variable (RTOS-safe)
+volatile bool ledCommand = false;
+volatile bool newCommand = false;
 
-// ------------------- Reception Task -------------------
-void reception_task(void *pvParameters)
-{
-  uint8_t data[BUF_SIZE];
-  Request req;
+Adafruit_NeoPixel pixels(1, LED_GPIO, NEO_GRB + NEO_KHZ800);
 
-  // Cấu hình UART
-  uart_config_t uart_config = {
-      .baud_rate = 115200,
-      .data_bits = UART_DATA_8_BITS,
-      .parity = UART_PARITY_DISABLE,
-      .stop_bits = UART_STOP_BITS_1,
-      .flow_ctrl = UART_HW_FLOWCTRL_DISABLE};
-  uart_param_config(UART_NUM, &uart_config);
-  uart_driver_install(UART_NUM, BUF_SIZE * 2, 0, 0, NULL, 0);
+// Forward declarations
+void TaskWebServer(void *pvParameters);
+void TaskGPIO(void *pvParameters);
 
-  printf("\n=== ESP32 FreeRTOS UART Command Demo ===\n");
-  printf("Gõ các lệnh sau trong Serial Monitor:\n");
-  printf("  - LED ON\n");
-  printf("  - LED OFF\n");
-  printf("  - SENSOR READ\n");
-  printf("  - PRINT Hello ESP32\n\n");
-
-  while (1)
-  {
-    int len = uart_read_bytes(UART_NUM, data, BUF_SIZE - 1, pdMS_TO_TICKS(1000));
-    if (len > 0)
-    {
-      data[len] = '\0';
-      printf("[Reception] Received: %s\n", data);
-
-      // Phân loại lệnh
-      if (strstr((char *)data, "LED"))
-        req.type = REQ_LED;
-      else if (strstr((char *)data, "SENSOR"))
-        req.type = REQ_SENSOR;
-      else if (strstr((char *)data, "PRINT"))
-        req.type = REQ_PRINT;
-      else
-        req.type = REQ_UNKNOWN;
-
-      strncpy(req.data, (char *)data, sizeof(req.data) - 1);
-      req.data[sizeof(req.data) - 1] = '\0';
-
-      if (xQueueSend(requestQueue, &req, pdMS_TO_TICKS(100)) != pdPASS)
-      {
-        printf("[Reception] Queue full! Dropping request.\n");
-      }
-    }
-    vTaskDelay(pdMS_TO_TICKS(50));
-  }
-}
-
-// ------------------- LED Task -------------------
-void led_task(void *pvParameters)
-{
-  gpio_reset_pin(LED_GPIO);
-  gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
-  Request req;
-
-  while (1)
-  {
-    if (xQueueReceive(requestQueue, &req, portMAX_DELAY))
-    {
-      if (req.type == REQ_LED)
-      {
-        if (strstr(req.data, "ON"))
-        {
-          gpio_set_level(LED_GPIO, 1);
-          printf("[LED Task] LED turned ON\n");
-        }
-        else if (strstr(req.data, "OFF"))
-        {
-          gpio_set_level(LED_GPIO, 0);
-          printf("[LED Task] LED turned OFF\n");
-        }
-        else
-        {
-          printf("[LED Task] Unknown LED command: %s\n", req.data);
-        }
-      }
-      else
-      {
-        // Không phải request cho LED → gửi lại
-        xQueueSendToBack(requestQueue, &req, 0);
-        vTaskDelay(pdMS_TO_TICKS(50));
-      }
-    }
-  }
-}
-
-// ------------------- Sensor Task -------------------
-void sensor_task(void *pvParameters)
-{
-  Request req;
-  while (1)
-  {
-    if (xQueueReceive(requestQueue, &req, portMAX_DELAY))
-    {
-      if (req.type == REQ_SENSOR)
-      {
-        // Giả lập giá trị cảm biến
-        int fake_value = 25 + (esp_random() % 10); // 25–34°C
-        printf("[Sensor Task] Sensor value: %d°C (simulated)\n", fake_value);
-      }
-      else
-      {
-        xQueueSendToBack(requestQueue, &req, 0);
-        vTaskDelay(pdMS_TO_TICKS(50));
-      }
-    }
-  }
-}
-
-// ------------------- Print Task -------------------
-void print_task(void *pvParameters)
-{
-  Request req;
-  while (1)
-  {
-    if (xQueueReceive(requestQueue, &req, portMAX_DELAY))
-    {
-      if (req.type == REQ_PRINT)
-      {
-        printf("[Print Task] Message: %s\n", req.data);
-      }
-      else if (req.type == REQ_UNKNOWN)
-      {
-        printf("[Error] Unknown command: %s\n", req.data);
-      }
-      else
-      {
-        xQueueSendToBack(requestQueue, &req, 0);
-        vTaskDelay(pdMS_TO_TICKS(50));
-      }
-    }
-  }
-}
-
-// ------------------- Main -------------------
 void setup()
 {
-  requestQueue = xQueueCreate(REQUEST_QUEUE_LENGTH, sizeof(Request));
-  if (requestQueue == NULL)
+  Serial.begin(115200);
+  pinMode(LED_GPIO, OUTPUT);
+  digitalWrite(LED_GPIO, LOW);
+
+  // Mount SPIFFS
+  if (!SPIFFS.begin(true))
   {
-    printf("Failed to create queue!\n");
+    Serial.println("SPIFFS mount failed!");
     return;
   }
 
-  xTaskCreate(reception_task, "ReceptionTask", 4096, NULL, 5, NULL);
-  xTaskCreate(led_task, "LEDTask", 4096, NULL, 4, NULL);
-  xTaskCreate(sensor_task, "SensorTask", 4096, NULL, 4, NULL);
-  xTaskCreate(print_task, "PrintTask", 4096, NULL, 4, NULL);
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi");
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    Serial.print(".");
+    delay(1000);
+  }
+  Serial.println();
+  Serial.print("Connected! IP address: ");
+  Serial.println(WiFi.localIP());
+
+  pixels.begin();            // KHỞI TẠO bắt buộc
+  pixels.setBrightness(255); // độ sáng 0–255
+  pixels.clear();            // xóa tất cả
+  pixels.show();             // cập nhật để tắt ban đầu
+  Serial.println("Setup done");
+
+  // Create RTOS tasks
+  xTaskCreatePinnedToCore(
+      TaskWebServer,
+      "WebServerTask",
+      8192,
+      NULL,
+      1,
+      &TaskWebServerHandle,
+      1);
+
+  xTaskCreatePinnedToCore(
+      TaskGPIO,
+      "GPIOControlTask",
+      2048,
+      NULL,
+      1,
+      &TaskGPIOHandle,
+      0);
 }
+
 void loop()
 {
-  // Không sử dụng trong FreeRTOS
+  // FreeRTOS sẽ lo việc chạy song song các task
+  Serial.println();
+  Serial.print("Connected! IP address: ");
+  Serial.println(WiFi.localIP());
+  if (!SPIFFS.begin(true))
+  {
+    Serial.println("SPIFFS mount failed!");
+    return;
+  }
+  Serial.println("SPIFFS mounted successfully!");
+  delay(10000);
 }
+
+// Task: chạy WebSocket server

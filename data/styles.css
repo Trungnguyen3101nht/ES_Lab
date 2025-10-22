@@ -6,31 +6,50 @@
   --off-color: #555;
 }
 
+/* Reset + layout chính */
 body {
   font-family: "Segoe UI", Arial, sans-serif;
   background: var(--bg-color);
   color: var(--text-color);
+  margin: 0;
+  padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  margin: 0;
+  min-height: 100vh;
 }
 
-.container {
+.main-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  align-items: center;
+}
+
+/* Card (khung) */
+.card {
   background: var(--card-color);
   padding: 40px 60px;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   text-align: center;
-  transition: 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s;
+  width: 300px;
 }
 
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* Tiêu đề */
 h1 {
   margin-bottom: 20px;
   font-weight: 600;
+  color: var(--accent);
 }
 
+/* LED toggle */
 .switch-container {
   display: flex;
   flex-direction: column;
@@ -38,7 +57,6 @@ h1 {
   gap: 12px;
 }
 
-/* Switch toggle styling */
 .switch {
   position: relative;
   display: inline-block;
@@ -85,8 +103,20 @@ input:checked + .slider:before {
   transform: translateX(40px);
 }
 
+/* LED status */
 #status {
   font-size: 1.2rem;
   margin-top: 10px;
+  color: var(--accent);
+}
+
+/* Temperature & Humidity */
+.sensor-values p {
+  font-size: 1.1rem;
+  margin: 10px 0;
+}
+
+.value {
+  font-weight: bold;
   color: var(--accent);
 }

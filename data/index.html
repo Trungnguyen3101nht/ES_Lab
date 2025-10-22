@@ -1,21 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <title>ESP32 RGB LED Control</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta charset="utf-8" />
+    <title>ESP32 RGB LED & DHT20 Monitor</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="container">
-      <h1>ESP32 RGB LED Control</h1>
-      <div class="switch-container">
-        <label class="switch">
-          <input type="checkbox" id="ledToggle">
-          <span class="slider"></span>
-        </label>
-        <p id="status">LED OFF</p>
-      </div>
-    </div>
+    <main class="main-container">
+      <!-- LED CONTROL -->
+      <section class="card">
+        <h1>LED RGB Control</h1>
+        <div class="switch-container">
+          <label class="switch">
+            <input type="checkbox" id="ledToggle" />
+            <span class="slider"></span>
+          </label>
+          <p id="status">LED OFF</p>
+        </div>
+      </section>
+
+
+      <!-- Relay control-->
+      <section class="card">
+        <div class="container">
+  <h1>Relay Control</h1>
+
+  <div class="switch-container">
+    <label class="switch">
+      <input type="checkbox" id="relay1">
+      <span class="slider"></span>
+    </label>
+    <p id="relayStatus1">Relay 1 OFF</p>
+  </div>
+
+  <div class="switch-container">
+    <label class="switch">
+      <input type="checkbox" id="relay2">
+      <span class="slider"></span>
+    </label>
+    <p id="relayStatus2">Relay 2 OFF</p>
+  </div>
+
+  <div class="switch-container">
+    <label class="switch">
+      <input type="checkbox" id="relay3">
+      <span class="slider"></span>
+    </label>
+    <p id="relayStatus3">Relay 3 OFF</p>
+  </div>
+
+  <div class="switch-container">
+    <label class="switch">
+      <input type="checkbox" id="relay4">
+      <span class="slider"></span>
+    </label>
+    <p id="relayStatus4">Relay 4 OFF</p>
+  </div>
+</div>
+
+      </section>
+
+      <!-- TEMPERATURE & HUMIDITY -->
+      <section class="card">
+        <h1>Temperature & Humidity</h1>
+        <div class="sensor-values">
+          <p>🌡️ Temperature: <span id="temp" class="value">--</span> °C</p>
+          <p>💧 Humidity: <span id="humi" class="value">--</span> %</p>
+        </div>
+      </section>
+    </main>
+
     <script src="script.js"></script>
   </body>
 </html>

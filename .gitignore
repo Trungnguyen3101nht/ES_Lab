@@ -11,3 +11,4 @@
 src/common/defines.h
 
 .DS_Store
+.env

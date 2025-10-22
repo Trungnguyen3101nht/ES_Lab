@@ -15,20 +15,11 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
 
             // Serial.print("Received: ");
             Serial.println(message);
-
-            if (message == "ON")
+            if (message.startsWith("LED"))
             {
-                pixels.setPixelColor(0, pixels.Color(255, 0, 255));
-                pixels.show();
-                // Serial.println("LED ON");
+                handleWSMesOfLED(arg, data, len);
             }
-            else if (message == "OFF")
-            {
-                pixels.setPixelColor(0, pixels.Color(0, 0, 0));
-                pixels.show();
-                // Serial.println("LED OFF");
-            }
-            else if (message.startsWith("RELAY")) // ✅ thêm phần này
+            else if (message.startsWith("RELAY"))
             {
                 handleWSMesOfRelay(arg, data, len);
             }
@@ -62,11 +53,9 @@ void TaskWebServer(void *pvParameters)
     for (;;)
     {
         ws.cleanupClients();
-        vTaskDelay(pdMS_TO_TICKS(100)); // Giải phóng CPU
+        vTaskDelay(pdMS_TO_TICKS(50)); // Giải phóng CPU
     }
 }
-
-// Task: điều khiển GPIO dựa trên lệnh
 
 void webServer_Init()
 {

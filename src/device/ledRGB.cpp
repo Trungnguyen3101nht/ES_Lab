@@ -1,14 +1,13 @@
 #include "ledRGB.h"
 
 bool ledState = false;
-int newCommand = 0;
-int ledCommand = 0;
+bool newCommand = false;
 
 void createLedRGB()
 {
-    pixels.begin();            // KHỞI TẠO bắt buộc
-    pixels.setBrightness(255); // độ sáng 0–255
-    pixels.clear();            // xóa tất cả
+    pixels.begin();
+    pixels.setBrightness(255);
+    pixels.clear();
     pixels.show();
 }
 
@@ -20,18 +19,24 @@ void writeLedstate()
     serializeJson(doc, json);
     ws.textAll(json);
 }
+
 void handleWSMesOfLED(void *arg, uint8_t *data, size_t len)
 {
-    AwsFrameInfo *info = (AwsFrameInfo *)arg;
-    if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
+    String msg = (char *)data;
+
+    if (msg.startsWith("LED"))
     {
-        data[len] = 0;
-        String msg = (char *)data;
-        if (msg == "toggle")
+        if (msg.endsWith("_ON"))
         {
-            ledState = !ledState;
-            ledCommand = ledState;
+            ledState = true;
             newCommand = true;
+            Serial.println("👉 Received LED_ON");
+        }
+        else if (msg.endsWith("_OFF"))
+        {
+            ledState = false;
+            newCommand = true;
+            Serial.println("👉 Received LED_OFF");
         }
     }
 }
@@ -42,15 +47,25 @@ void TaskGPIO(void *pvParameters)
     {
         if (newCommand)
         {
-            digitalWrite(LED_GPIO, ledCommand ? HIGH : LOW);
+            if (ledState)
+            {
+                pixels.setPixelColor(0, pixels.Color(255, 0, 255)); // tím
+            }
+            else
+            {
+                pixels.setPixelColor(0, pixels.Color(0, 0, 0)); // tắt
+            }
+            pixels.show();
             writeLedstate();
             newCommand = false;
         }
-        vTaskDelay(pdMS_TO_TICKS(10)); // delay nhỏ để tránh busy loop
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
+
 void LedRGB_Init()
 {
+    createLedRGB();
     xTaskCreatePinnedToCore(
         TaskGPIO,
         "TaskGPIO",

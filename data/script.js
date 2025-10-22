@@ -1,72 +1,77 @@
-let gateway = `ws://${window.location.hostname}/ws`;
-let websocket;
+const gateway = `ws://${window.location.hostname}/ws`;
+let ws;
 
-window.addEventListener('load', onLoad);
-
-function onLoad() {
-  initWebSocket();
-
-  // LED toggle
-  const ledToggle = document.getElementById('ledToggle');
-  ledToggle.addEventListener('change', () => {
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-      websocket.send(ledToggle.checked ? 'ON' : 'OFF');
-      document.getElementById('status').textContent = ledToggle.checked ? 'LED ON' : 'LED OFF';
-    }
-  });
-
-  // Relay toggles (RELAY1...RELAY4)
-  for (let i = 1; i <= 4; i++) {
-    const relayToggle = document.getElementById(`relay${i}`);
-    const relayStatus = document.getElementById(`relayStatus${i}`);
-
-    relayToggle.addEventListener('change', () => {
-      if (websocket && websocket.readyState === WebSocket.OPEN) {
-        const command = relayToggle.checked ? `RELAY${i}_ON` : `RELAY${i}_OFF`;
-        console.log(`Sending command: ${command}`);
-        websocket.send(command);
-        relayStatus.textContent = relayToggle.checked ? `Relay ${i} ON` : `Relay ${i} OFF`;
-      }
-    });
-  }
-}
+window.addEventListener("load", () => initWebSocket());
 
 function initWebSocket() {
-  console.log('Connecting to WebSocket...');
-  websocket = new WebSocket(gateway);
+  console.log("🔌 Connecting to WebSocket...");
+  ws = new WebSocket(gateway);
 
-  websocket.onopen = () => console.log('✅ Connected to WebSocket');
+  ws.onopen = () => {
+    console.log("✅ WebSocket connected");
+    setupUI();
+  };
 
-  websocket.onclose = () => {
-    console.log('❌ WebSocket closed, retrying...');
+  ws.onclose = () => {
+    console.warn("❌ WebSocket closed, reconnecting...");
     setTimeout(initWebSocket, 2000);
   };
 
-  websocket.onmessage = (event) => {
-    console.log('📩 Message from ESP32:', event.data);
-    try {
-      const data = JSON.parse(event.data);
+  ws.onmessage = (event) => handleMessage(event.data);
+}
 
-      // Cập nhật nhiệt độ / độ ẩm
-      if ('temperature' in data && 'humidity' in data) {
-        document.getElementById("temp").textContent = data.temperature.toFixed(2);
-        document.getElementById("humi").textContent = data.humidity.toFixed(2);
-      }
+function setupUI() {
+  // 🔘 LED toggle
+  const ledToggle = document.getElementById("ledToggle");
+  ledToggle.onchange = () => sendCommand(ledToggle.checked ? "LED_ON" : "LED_OFF");
 
-      // Cập nhật trạng thái relay
-      if ('relays' in data) {
-        data.relays.forEach((state, index) => {
-          const toggle = document.getElementById(`relay${index + 1}`);
-          const status = document.getElementById(`relayStatus${index + 1}`);
-          if (toggle) {
-            toggle.checked = state;
-            status.textContent = state ? `Relay ${index + 1} ON` : `Relay ${index + 1} OFF`;
-          }
-        });
-      }
+  // 🔲 Relay toggles (RELAY1...RELAY4)
+  for (let i = 1; i <= 4; i++) {
+    const relayToggle = document.getElementById(`relay${i}`);
+    relayToggle.onchange = () =>
+      sendCommand(relayToggle.checked ? `RELAY${i}_ON` : `RELAY${i}_OFF`);
+  }
+}
 
-    } catch (err) {
-      console.warn("⚠️ Invalid JSON:", event.data);
+function sendCommand(cmd) {
+  if (ws?.readyState === WebSocket.OPEN) {
+    console.log(`📤 Sending: ${cmd}`);
+    ws.send(cmd);
+  } else {
+    console.warn("⚠️ WebSocket not ready, command skipped");
+  }
+}
+
+function handleMessage(raw) {
+  try {
+    const data = JSON.parse(raw);
+
+    // 🌡️ Update temperature & humidity
+    if ("temperature" in data && "humidity" in data) {
+      document.getElementById("temp").textContent = data.temperature.toFixed(2);
+      document.getElementById("humi").textContent = data.humidity.toFixed(2);
     }
-  };
+
+    // 💡 Update LED state
+    if ("led" in data) {
+      const ledToggle = document.getElementById("ledToggle");
+      const status = document.getElementById("status");
+      ledToggle.checked = data.led;
+      status.textContent = data.led ? "LED ON" : "LED OFF";
+    }
+
+    // ⚙️ Update relay states
+    if ("relays" in data) {
+      data.relays.forEach((state, i) => {
+        const toggle = document.getElementById(`relay${i + 1}`);
+        const status = document.getElementById(`relayStatus${i + 1}`);
+        if (toggle && status) {
+          toggle.checked = state;
+          status.textContent = state ? `Relay ${i + 1} ON` : `Relay ${i + 1} OFF`;
+        }
+      });
+    }
+  } catch {
+    console.warn("⚠️ Invalid JSON:", raw);
+  }
 }

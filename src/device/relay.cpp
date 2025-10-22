@@ -1,62 +1,58 @@
 #include "relay.h"
 
-const int NUM_RELAYS = 4;
-const int relayPins[NUM_RELAYS] = {Relay_1, Relay_2, Relay_3, Relay_4}; // ví dụ các chân GPIO
+constexpr int NUM_RELAYS = 4;
+const int relayPins[NUM_RELAYS] = {Relay_1, Relay_2, Relay_3, Relay_4};
 
-bool RelayState[NUM_RELAYS] = {false, false, false, false};
-bool newCommandofRelay = false;
-int relayCommandIndex = -1;
-bool relayCommandState = false;
+bool relayState[NUM_RELAYS] = {false};
+bool newCommandRelay = false;
+int relayIndex = -1;
+bool relayNewState = false;
 
-// gửi trạng thái tất cả relay về client
+// Gửi trạng thái tất cả relay về client
 void writeRelayState()
 {
     DynamicJsonDocument doc(256);
     JsonArray arr = doc.createNestedArray("relays");
-    for (int i = 0; i < NUM_RELAYS; i++)
-    {
-        arr.add(RelayState[i]);
-    }
+    for (bool state : relayState)
+        arr.add(state);
+
     String json;
     serializeJson(doc, json);
     ws.textAll(json);
 }
 
+// Xử lý lệnh WebSocket
 void handleWSMesOfRelay(void *arg, uint8_t *data, size_t len)
 {
-    AwsFrameInfo *info = (AwsFrameInfo *)arg;
-    if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
-    {
-        data[len] = 0;
-        String msg = (char *)data;
+    String msg = (char *)data;
 
-        if (msg.startsWith("RELAY"))
+    if (msg.startsWith("RELAY"))
+    {
+        int index = msg.substring(5, 6).toInt() - 1; // RELAY1 → index = 0
+        if (index >= 0 && index < NUM_RELAYS)
         {
-            int relayNum = msg.substring(5, 6).toInt() - 1;
-            if (relayNum >= 0 && relayNum < NUM_RELAYS)
-            {
-                bool state = msg.endsWith("_ON");
-                RelayState[relayNum] = state;
-                relayCommandIndex = relayNum;
-                relayCommandState = state;
-                newCommandofRelay = true;
-            }
+            bool state = msg.endsWith("_ON");
+            relayState[index] = state;
+            relayIndex = index;
+            relayNewState = state;
+            newCommandRelay = true;
+
+            Serial.printf("👉 Received %s → Relay %d %s\n",
+                          msg.c_str(), index + 1, state ? "ON" : "OFF");
         }
     }
 }
 
-void TaskRELAY(void *pvParameters)
+// Task điều khiển relay
+void TaskRelay(void *pvParameters)
 {
     for (;;)
     {
-        if (newCommandofRelay)
+        if (newCommandRelay && relayIndex >= 0 && relayIndex < NUM_RELAYS)
         {
-            if (relayCommandIndex >= 0 && relayCommandIndex < NUM_RELAYS)
-            {
-                digitalWrite(relayPins[relayCommandIndex], relayCommandState ? HIGH : LOW);
-            }
+            digitalWrite(relayPins[relayIndex], relayNewState ? HIGH : LOW);
             writeRelayState();
-            newCommandofRelay = false;
+            newCommandRelay = false;
         }
         vTaskDelay(pdMS_TO_TICKS(10));
     }
@@ -65,15 +61,15 @@ void TaskRELAY(void *pvParameters)
 // Khởi tạo relay
 void Relay_Init()
 {
-    for (int i = 0; i < NUM_RELAYS; i++)
+    for (int pin : relayPins)
     {
-        pinMode(relayPins[i], OUTPUT);
-        digitalWrite(relayPins[i], LOW);
+        pinMode(pin, OUTPUT);
+        digitalWrite(pin, LOW);
     }
 
     xTaskCreatePinnedToCore(
-        TaskRELAY,
-        "TaskRELAY",
+        TaskRelay,
+        "TaskRelay",
         2048,
         NULL,
         1,

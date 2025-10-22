@@ -120,3 +120,20 @@ input:checked + .slider:before {
   font-weight: bold;
   color: var(--accent);
 }
+
+/* ====== Layout tổng thể ====== */
+.dashboard {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  flex-wrap: wrap;
+  padding: 40px;
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}

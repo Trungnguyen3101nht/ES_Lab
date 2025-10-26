@@ -36,6 +36,6 @@ void setup()
 
 void loop()
 {
-  // Serial.println(WiFi.localIP());
-  // delay(10000);
+  Serial.println(WiFi.localIP());
+  delay(10000);
 }

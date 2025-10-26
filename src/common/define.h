@@ -7,6 +7,9 @@
 
 #define LED_GPIO 45
 
+// #define RESET_BUTTON_PIN 0    // GPIO0 (hoặc đổi pin bạn dùng)
+// #define WIFI_TIMEOUT_MS 30000 // 30 giây không có Wi-Fi thì quay lại AP
+
 extern const char *ssid;
 extern const char *password;
 

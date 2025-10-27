@@ -3,15 +3,13 @@
 #define TIMER1_PERIOD_MS 2000 // 2 seconds
 #define TIMER2_PERIOD_MS 3000 // 3 seconds
 
-// Number of prints before stopping
 #define TIMER1_MAX_COUNT 10
 #define TIMER2_MAX_COUNT 5
 
-// Timer handles
 TimerHandle_t timer1_handle;
 TimerHandle_t timer2_handle;
 
-// Shared callback function
+// Shared callback functio
 void timer_callback(TimerHandle_t xTimer)
 {
   static int count1 = 0;

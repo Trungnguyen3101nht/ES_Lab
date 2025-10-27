@@ -28,23 +28,26 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
 }
 void initWebServer()
 {
+    if (WiFi.getMode() != WIFI_STA || WiFi.status() != WL_CONNECTED)
+    {
+        Serial.println("⚠️ WiFi chưa sẵn sàng, chưa khởi động WebServer!");
+        return;
+    }
+
     ws.onEvent(onEvent);
     server.addHandler(&ws);
 
-    // Trang HTML chính
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
               { request->send(SPIFFS, "/index.html", "text/html"); });
 
-    // File CSS
     server.on("/styles.css", HTTP_GET, [](AsyncWebServerRequest *request)
               { request->send(SPIFFS, "/styles.css", "text/css"); });
 
-    // File JavaScript
     server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request)
               { request->send(SPIFFS, "/script.js", "application/javascript"); });
 
     server.begin();
-    Serial.println("WebSocket server started with RTOS!");
+    Serial.println("🌍 WebSocket server started!");
 }
 
 void TaskWebServer(void *pvParameters)

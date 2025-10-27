@@ -1,11 +1,8 @@
 #include "global.h"
 
-const char *ssid = "ACLAB";
-const char *password = "ACLAB2023";
-
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
-
+AsyncWebServer serverAP(80);
 Adafruit_NeoPixel pixels(1, LED_GPIO, NEO_GRB + NEO_KHZ800);
 
 void setup()
@@ -19,16 +16,16 @@ void setup()
     return;
   }
 
-  WiFi.begin(ssid, password);
-  Serial.print("Connecting to WiFi");
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    Serial.print(".");
-    delay(1000);
-  }
-  Serial.println();
-  Serial.print("Connected! IP address: ");
-  Serial.println(WiFi.localIP());
+  // WiFi.begin(ssid, password);
+  // Serial.print("Connecting to WiFi");
+  // while (WiFi.status() != WL_CONNECTED)
+  // {
+  //   Serial.print(".");
+  //   delay(1000);
+  // }
+  // Serial.println();
+  // Serial.print("Connected! IP address: ");
+  // Serial.println(WiFi.localIP());
 
   Connect_Init();
   Device_Init();

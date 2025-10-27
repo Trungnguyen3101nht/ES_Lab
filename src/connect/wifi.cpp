@@ -1,162 +1,162 @@
-// #include "wifi.h"
+#include "wifi.h"
 
-// Preferences prefs;
-// WebServer server(80);
+String ssid = "";
+String password = "";
+volatile bool shouldConnect = false;
+volatile bool apActive = false;
 
-// const char *apSSID = "ESP32_Config_AP";
-// const char *apPassword = "12345678";
+const char *htmlPage = R"rawliteral(
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ESP32 WiFi Config</title>
+  <style>
+    body {
+      background: radial-gradient(circle at top, #111, #000);
+      color: #0ff;
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
+    }
+    h2 { text-shadow: 0 0 10px #0ff; }
+    form { background: rgba(20,20,20,0.85); border: 2px solid #0ff; border-radius: 15px; padding: 30px; display: inline-block; margin-top: 40px; }
+    input { margin: 10px; padding: 10px; background: #111; border: 1px solid #0ff; color: #0ff; border-radius: 5px; }
+    input[type=submit]{ background: linear-gradient(90deg,#00ffff,#ff00ff); color: black; font-weight: bold; border:none; border-radius: 8px; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <h2>⚡ ESP32 WiFi Config ⚡</h2>
+  <form action="/save" method="post">
+    <input type="text" name="ssid" placeholder="SSID"><br>
+    <input type="password" name="pass" placeholder="Password"><br>
+    <input type="submit" value="Lưu">
+  </form>
+</body>
+</html>
+)rawliteral";
 
-// unsigned long wifiLostTime = 0;
-// bool wifiConnected = false;
-// bool apMode = false;
+void connectWiFiTask(void *parameter)
+{
+  Serial.println("🔄 Kết nối tới WiFi...");
 
-// void startAccessPoint()
-// {
-//     WiFi.mode(WIFI_AP);
-//     WiFi.softAP(apSSID, apPassword);
-//     IPAddress myIP = WiFi.softAPIP();
-//     Serial.printf("[AP Mode] SSID: %s | IP: %s\n", apSSID, myIP.toString().c_str());
-//     apMode = true;
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid.c_str(), password.c_str());
 
-//     server.on("/", HTTP_GET, []()
-//               {
-//     String html = R"rawliteral(
-//       <html><body>
-//       <h2>ESP32 Wi-Fi Config</h2>
-//       <form action="/save" method="post">
-//       SSID: <input name="ssid"><br>
-//       Password: <input name="pass" type="password"><br>
-//       <input type="submit" value="Lưu cấu hình">
-//       </form></body></html>
-//     )rawliteral";
-//     server.send(200, "text/html; charset=utf-8", html); });
+  int retry = 0;
+  while (WiFi.status() != WL_CONNECTED && retry < 20)
+  {
+    pixels.setPixelColor(0, pixels.Color(255, 255, 0));
+    pixels.show();
+    vTaskDelay(pdMS_TO_TICKS(150));
+    pixels.clear();
+    pixels.show();
+    vTaskDelay(pdMS_TO_TICKS(850));
+    Serial.print(".");
+    retry++;
+  }
 
-//     server.on("/save", HTTP_POST, []()
-//               {
-//     String ssid = server.arg("ssid");
-//     String pass = server.arg("pass");
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    pixels.setPixelColor(0, pixels.Color(0, 255, 0));
+    pixels.show();
 
-//     prefs.begin("wifi", false);
-//     prefs.putString("ssid", ssid);
-//     prefs.putString("pass", pass);
-//     prefs.end();
+    Serial.println("\n✅ Đã kết nối WiFi!");
+    Serial.print("IP: ");
+    Serial.println(WiFi.localIP());
 
-//     server.send(200, "text/html; charset=utf-8",
-//                 "<h3>Đã lưu Wi-Fi! ESP sẽ khởi động lại...</h3>");
-//     delay(1500);
-//     ESP.restart(); });
+    serverAP.end();
+    vTaskDelay(pdMS_TO_TICKS(100));
 
-//     server.begin();
-//     Serial.println("[AP Mode] WebServer chạy tại http://192.168.4.1");
-// }
+    webServer_Init();
+  }
+  else
+  {
+    Serial.println("\n❌ Kết nối thất bại! Quay lại AP mode...");
 
-// // =============================
-// void WiFiEvent(WiFiEvent_t event)
-// {
-//     switch (event)
-//     {
-//     case SYSTEM_EVENT_STA_GOT_IP:
-//         Serial.print("[WiFi] Kết nối thành công! IP: ");
-//         Serial.println(WiFi.localIP());
-//         wifiConnected = true;
-//         wifiLostTime = 0;
-//         break;
+    for (int i = 0; i < 6; i++)
+    {
+      pixels.setPixelColor(0, pixels.Color(255, 0, 0));
+      pixels.show();
+      vTaskDelay(pdMS_TO_TICKS(200));
+      pixels.clear();
+      pixels.show();
+      vTaskDelay(pdMS_TO_TICKS(200));
+    }
 
-//     case SYSTEM_EVENT_STA_DISCONNECTED:
-//         Serial.println("[WiFi] Mất kết nối!");
-//         wifiConnected = false;
-//         wifiLostTime = millis();
-//         break;
+    shouldConnect = false;
+    apActive = false;
+    vTaskDelay(pdMS_TO_TICKS(1500));
 
-//     default:
-//         break;
-//     }
-// }
+    xTaskCreatePinnedToCore(apTask, "apTask", 8192, NULL, 5, NULL, 1);
+  }
 
-// void connectToSavedWiFi()
-// {
-//     prefs.begin("wifi", true);
-//     String ssid = prefs.getString("ssid", "");
-//     String pass = prefs.getString("pass", "");
-//     prefs.end();
+  vTaskDelete(NULL);
+}
 
-//     if (ssid == "")
-//     {
-//         Serial.println("[WiFi] Không có cấu hình, bật AP...");
-//         startAccessPoint();
-//         return;
-//     }
+void apTask(void *parameter)
+{
+  if (apActive)
+  {
+    vTaskDelete(NULL);
+    return;
+  }
 
-//     WiFi.mode(WIFI_STA);
-//     WiFi.onEvent(WiFiEvent);
-//     WiFi.begin(ssid.c_str(), pass.c_str());
+  apActive = true;
 
-//     Serial.printf("[WiFi] Đang kết nối tới SSID: %s\n", ssid.c_str());
-// }
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP("ESP32_Config", "12345678");
 
-// void clearWiFiConfig()
-// {
-//     prefs.begin("wifi", false);
-//     prefs.clear();
-//     prefs.end();
-//     Serial.println("[WiFi] Đã xóa cấu hình Wi-Fi!");
-// }
+  Serial.println("📶 Access Point đã bật!");
+  Serial.print("IP: ");
+  Serial.println(WiFi.softAPIP());
 
-// void checkResetButton()
-// {
-//     static unsigned long pressedTime = 0;
-//     static bool pressed = false;
+  serverAP.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(200, "text/html", htmlPage); });
 
-//     if (digitalRead(RESET_BUTTON_PIN) == LOW)
-//     { // nhấn
-//         if (!pressed)
-//         {
-//             pressed = true;
-//             pressedTime = millis();
-//         }
-//         else if (millis() - pressedTime > 10000)
-//         { // giữ > 10 giây
-//             Serial.println("[BUTTON] Giữ nút 10s: xóa Wi-Fi và bật lại AP!");
-//             clearWiFiConfig();
-//             delay(500);
-//             ESP.restart();
-//         }
-//     }
-//     else
-//     {
-//         pressed = false;
-//     }
-// }
+  serverAP.on("/save", HTTP_POST, [](AsyncWebServerRequest *request)
+              {
+                 if (request->hasParam("ssid", true) && request->hasParam("pass", true))
+                 {
+                   ssid = request->getParam("ssid", true)->value();
+                   password = request->getParam("pass", true)->value();
 
-// void setup()
-// {
-//     Serial.begin(115200);
-//     delay(1000);
-//     pinMode(RESET_BUTTON_PIN, INPUT_PULLUP);
+                   request->send(200, "text/html", "✅ Đã lưu WiFi! ESP32 sẽ kết nối...");
+                   Serial.println("📥 SSID: " + ssid);
+                   Serial.println("PASS: " + password);
 
-//     Serial.println("=== ESP32 Wi-Fi Auto Reconfig ===");
-//     connectToSavedWiFi();
-// }
+                   shouldConnect = true;
+                 }
+                 else
+                 {
+                   request->send(400, "text/plain", "Thiếu SSID hoặc mật khẩu!");
+                 } });
 
-// void loop()
-// {
-//     if (apMode)
-//     {
-//         server.handleClient(); // xử lý web khi đang ở AP
-//     }
-//     else
-//     {
-//         checkResetButton();
+  serverAP.begin();
+  Serial.println("🌐 WebServer (AP Mode) đã sẵn sàng!");
 
-//         // Nếu mất Wi-Fi quá 30 giây => restart về AP
-//         if (!wifiConnected && wifiLostTime > 0 && (millis() - wifiLostTime > WIFI_TIMEOUT_MS))
-//         {
-//             Serial.println("[WiFi] Mất Wi-Fi quá lâu, quay lại Access Point...");
-//             clearWiFiConfig();
-//             delay(500);
-//             ESP.restart();
-//         }
-//     }
+  while (true)
+  {
+    if (shouldConnect)
+    {
+      shouldConnect = false;
+      apActive = false;
 
-//     delay(10);
-// }
+      Serial.println("🔻 Tắt Access Point...");
+      serverAP.end();
+      WiFi.softAPdisconnect(true);
+      vTaskDelay(pdMS_TO_TICKS(300));
+
+      Serial.println("🚀 Bắt đầu task kết nối WiFi...");
+      xTaskCreatePinnedToCore(connectWiFiTask, "connectWiFiTask", 8192, NULL, 5, NULL, 1);
+
+      vTaskDelete(NULL);
+    }
+    vTaskDelay(pdMS_TO_TICKS(500));
+  }
+}
+
+void Wifi_init()
+{
+  xTaskCreatePinnedToCore(apTask, "apTask", 8192, NULL, 5, NULL, 1);
+}

@@ -1,5 +1,7 @@
 #include "wifi.h"
 
+Preferences preferences;
+
 String ssid = "";
 String password = "";
 volatile bool shouldConnect = false;
@@ -13,7 +15,7 @@ const char *htmlPage = R"rawliteral(
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ESP32 WiFi Config</title>
   <style>
-    body {
+    body { 
       background: radial-gradient(circle at top, #111, #000);
       color: #0ff;
       font-family: 'Orbitron', sans-serif;
@@ -36,6 +38,7 @@ const char *htmlPage = R"rawliteral(
 </html>
 )rawliteral";
 
+// -------------------- TASK KẾT NỐI WIFI --------------------
 void connectWiFiTask(void *parameter)
 {
   Serial.println("🔄 Kết nối tới WiFi...");
@@ -64,6 +67,13 @@ void connectWiFiTask(void *parameter)
     Serial.println("\n✅ Đã kết nối WiFi!");
     Serial.print("IP: ");
     Serial.println(WiFi.localIP());
+
+    // 🔒 Lưu WiFi vào NVS
+    preferences.begin("wifi", false);
+    preferences.putString("ssid", ssid);
+    preferences.putString("pass", password);
+    preferences.end();
+    Serial.println("💾 Đã lưu thông tin WiFi!");
 
     serverAP.end();
     vTaskDelay(pdMS_TO_TICKS(100));
@@ -94,6 +104,7 @@ void connectWiFiTask(void *parameter)
   vTaskDelete(NULL);
 }
 
+// -------------------- TASK ACCESS POINT --------------------
 void apTask(void *parameter)
 {
   if (apActive)
@@ -156,7 +167,26 @@ void apTask(void *parameter)
   }
 }
 
+// -------------------- KHỞI TẠO WIFI --------------------
 void Wifi_init()
 {
-  xTaskCreatePinnedToCore(apTask, "apTask", 8192, NULL, 5, NULL, 1);
+  // 🔍 Kiểm tra xem có WiFi đã lưu không
+  preferences.begin("wifi", true);
+  String savedSSID = preferences.getString("ssid", "");
+  String savedPASS = preferences.getString("pass", "");
+  preferences.end();
+
+  if (savedSSID != "")
+  {
+    ssid = savedSSID;
+    password = savedPASS;
+
+    Serial.println("📡 Đã tìm thấy WiFi đã lưu, thử kết nối...");
+    xTaskCreatePinnedToCore(connectWiFiTask, "connectWiFiTask", 8192, NULL, 5, NULL, 1);
+  }
+  else
+  {
+    Serial.println("⚙️ Không có WiFi đã lưu, khởi động AP...");
+    xTaskCreatePinnedToCore(apTask, "apTask", 8192, NULL, 5, NULL, 1);
+  }
 }

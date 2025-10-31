@@ -59,9 +59,9 @@ void setup()
   // giúp  nhận nút nhấn ngay mà ko cần phải kiểm tra liên tục trong loop
   attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), handleButtonInterrupt, FALLING);
   /*
-  - digitalPinToInterrupt(BUTTON_PIN) → Lấy số ngắt tương ứng với chân đó.
-  - handleButtonInterrupt → Hàm sẽ được gọi ngay lập tức khi ngắt xảy ra.
-  - FALLING → Kiểu ngắt: xảy ra khi tín hiệu chuyển từ mức cao xuống mức thấp (nút được nhấn trong trường hợp dùng INPUT_PULLUP).
+  - digitalPinToInterrupt(BUTTON_PIN): Lấy số ngắt tương ứng với chân đó.
+  - handleButtonInterrupt: Hàm sẽ được gọi ngay lập tức khi ngắt xảy ra.
+  - FALLING -> Kiểu ngắt: xảy ra khi tín hiệu chuyển từ mức cao xuống mức thấp (nút được nhấn trong trường hợp dùng INPUT_PULLUP).
   */
 }
 

@@ -20,11 +20,9 @@
 
 // void setup() {
 //   Serial.begin(115200);
-
-//   // Both tasks same priority => time slicing occurs
 //   xTaskCreate(task1, "Task1", 2048, NULL, 1, &Task1);
 //   xTaskCreate(task2, "Task2", 2048, NULL, 1, &Task2);
-// }
+
 //-----------------------------------------------------------------------------
 // Prioritized Pre-emptive Scheduling without Time Slicing. ///
 // #define configUSE_TIME_SLICING 0
@@ -52,8 +50,8 @@
 
 // void loop()
 // {
-//   // Empty loop
 // }
+
 //-----------------------------------------------------------------------------
 // Co-operative Scheduling
 // void coopTask1(void *pv)
@@ -80,6 +78,7 @@
 //   xTaskCreate(coopTask1, "Coop1", 2048, NULL, 1, NULL);
 //   xTaskCreate(coopTask2, "Coop2", 2048, NULL, 1, NULL);
 // }
+
 //-----------------------------------------------------------------------------
 // extra exercise
 

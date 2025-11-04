@@ -12,7 +12,6 @@ void setup()
 {
   Serial.begin(115200);
 
-  // Mount LittleFS
   if (!LittleFS.begin(true))
   {
     Serial.println("LittleFS mount failed!");

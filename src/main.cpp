@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
-#define TIMER1_PERIOD_MS 2000 // 2 seconds
-#define TIMER2_PERIOD_MS 3000 // 3 seconds
+#define TIMER1_PERIOD_MS 2000
+#define TIMER2_PERIOD_MS 3000
 
 #define TIMER1_MAX_COUNT 10
 #define TIMER2_MAX_COUNT 5
@@ -9,7 +9,6 @@
 TimerHandle_t timer1_handle;
 TimerHandle_t timer2_handle;
 
-// Shared callback functio
 void timer_callback(TimerHandle_t xTimer)
 {
   static int count1 = 0;
@@ -37,10 +36,6 @@ void timer_callback(TimerHandle_t xTimer)
       printf("Timer 2 stopped.\n");
     }
   }
-}
-
-void app_main(void)
-{
 }
 
 void setup()

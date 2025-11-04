@@ -8,7 +8,6 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "LittleFS.h"
-#include "SPIFFS.h"
 
 #include <Adafruit_NeoPixel.h>
 #include <ArduinoJson.h>
@@ -18,7 +17,8 @@
 #include <NTPClient.h>
 #include <PubSubClient.h>
 #include <SoftwareSerial.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
+
 #include <time.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>

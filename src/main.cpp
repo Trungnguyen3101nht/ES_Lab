@@ -12,10 +12,10 @@ void setup()
 {
   Serial.begin(115200);
 
-  // Mount SPIFFS
-  if (!SPIFFS.begin(true))
+  // Mount LittleFS
+  if (!LittleFS.begin(true))
   {
-    Serial.println("SPIFFS mount failed!");
+    Serial.println("LittleFS mount failed!");
     return;
   }
 

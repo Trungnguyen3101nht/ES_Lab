@@ -28,20 +28,21 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
 }
 void initWebServer()
 {
+
     ws.onEvent(onEvent);
     server.addHandler(&ws);
 
     // Trang HTML chính
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/index.html", "text/html"); });
+              { request->send(LittleFS, "/index.html", "text/html"); });
 
     // File CSS
     server.on("/styles.css", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/styles.css", "text/css"); });
+              { request->send(LittleFS, "/styles.css", "text/css"); });
 
     // File JavaScript
     server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/script.js", "application/javascript"); });
+              { request->send(LittleFS, "/script.js", "application/javascript"); });
 
     server.begin();
     Serial.println("WebSocket server started with RTOS!");

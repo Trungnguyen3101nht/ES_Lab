@@ -274,9 +274,12 @@ void apTask(void *parameter)
     if (req->hasParam("ssid", true) && req->hasParam("pass", true)) {
       ssid = req->getParam("ssid", true)->value();
       password = req->getParam("pass", true)->value();
-      req->send(200, "text/html", "✅ Đã lưu WiFi! ESP32 sẽ kết nối...");
+      
       Serial.printf("📥 SSID: %s | PASS: %s\n", ssid.c_str(), password.c_str());
       shouldConnect = true;
+ 
+
+    req->send(200, "text/html", "Check the Serial Monitor for connection status.");
     } else req->send(400, "text/plain", "Thiếu SSID hoặc mật khẩu!"); });
 
   serverAP.begin();

@@ -9,24 +9,6 @@ void setup()
 {
   Serial.begin(115200);
 
-  // Mount SPIFFS
-  if (!SPIFFS.begin(true))
-  {
-    Serial.println("SPIFFS mount failed!");
-    return;
-  }
-
-  // WiFi.begin(ssid, password);
-  // Serial.print("Connecting to WiFi");
-  // while (WiFi.status() != WL_CONNECTED)
-  // {
-  //   Serial.print(".");
-  //   delay(1000);
-  // }
-  // Serial.println();
-  // Serial.print("Connected! IP address: ");
-  // Serial.println(WiFi.localIP());
-
   Connect_Init();
   Device_Init();
 }

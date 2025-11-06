@@ -30,13 +30,13 @@ void handleWSMesOfLED(void *arg, uint8_t *data, size_t len)
         {
             ledState = true;
             newCommand = true;
-            Serial.println("👉 Received LED_ON");
+            // Serial.println("👉 Received LED_ON");
         }
         else if (msg.endsWith("_OFF"))
         {
             ledState = false;
             newCommand = true;
-            Serial.println("👉 Received LED_OFF");
+            // Serial.println("👉 Received LED_OFF");
         }
     }
 }

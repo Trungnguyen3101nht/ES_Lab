@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ESP32 WiFi Config</title>
+  <style>
+    body {
+      background: radial-gradient(circle at top, #111, #000);
+      color: #0ff;
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
+      margin: 0; padding: 0;
+    }
+    h2 { text-shadow: 0 0 10px #0ff; margin-top: 60px; }
+    form {
+      background: rgba(20,20,20,0.85);
+      border: 2px solid #0ff;
+      border-radius: 15px;
+      padding: 30px;
+      display: inline-block;
+      margin-top: 40px;
+    }
+    input {
+      margin: 10px; padding: 10px;
+      background: #111; border: 1px solid #0ff;
+      color: #0ff; border-radius: 5px; text-align: center;
+      width: 80%;
+    }
+    input[type=submit] {
+      background: linear-gradient(90deg,#00ffff,#ff00ff);
+      color: black; font-weight: bold; border: none;
+      border-radius: 8px; cursor: pointer;
+      width: auto;
+    }
+    button {
+      background: none;
+      color: #0ff;
+      border: 1px solid #0ff;
+      border-radius: 8px;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 15px;
+    }
+    button:hover { background: #0ff; color: #000; }
+    ul { list-style: none; padding: 0; margin: 10px 0; }
+    li {
+      margin: 5px auto;
+      width: 80%;
+      padding: 10px;
+      background: rgba(0,255,255,0.05);
+      border-radius: 8px;
+      border: 1px solid rgba(0,255,255,0.3);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    li:hover { background: rgba(0,255,255,0.15); }
+    .rssi { font-size: 0.9em; opacity: 0.8; }
+  </style>
+</head>
+<body>
+  <h2>WiFi Config</h2>
+  <div>
+    <h4>Quét thông tin wifi</h4>
+    <button id="scanBtn">🔎 Scan</button>
+    <div id="scanStatus" style="margin-top:8px;"></div>
+    <ul id="networks"></ul>
+  </div>
+  <h4>Nhập thông tin Wi-Fi</h4>
+  <form action="/save" method="post">
+    <input type="text" name="ssid" placeholder="SSID"><br>
+    <input type="password" name="pass" placeholder="Password"><br>
+    <input type="submit" value="Lưu">
+  </form>
+
+
+
+  <script>
+    async function scanWifi() {
+      const status = document.getElementById('scanStatus');
+      const list = document.getElementById('networks');
+      status.textContent = 'Đang quét Wi-Fi...';
+      list.innerHTML = '';
+      try {
+        const res = await fetch('/scan');
+        if (!res.ok) throw new Error('Scan failed');
+        const nets = await res.json();
+        if (nets.length === 0) {
+          status.textContent = 'Không tìm thấy mạng nào.';
+          return;
+        }
+        status.textContent = 'Tìm thấy ' + nets.length + ' mạng:';
+        nets.sort((a,b) => b.rssi - a.rssi);
+        nets.forEach(n => {
+          const li = document.createElement('li');
+          li.innerHTML = `<strong>${escapeHtml(n.ssid)}</strong> <span class="rssi">(${n.rssi} dBm) ${n.secure ? '🔒' : '🔓'}</span>`;
+          li.onclick = () => {
+            document.querySelector('input[name="ssid"]').value = n.ssid;
+            document.querySelector('input[name="pass"]').focus();
+          };
+          list.appendChild(li);
+        });
+      } catch (err) {
+        console.error(err);
+        status.textContent = '⚠️ Lỗi khi quét Wi-Fi.';
+      }
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"'`=\/]/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',
+        "'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'
+      }[c]));
+    }
+
+    document.getElementById('scanBtn').addEventListener('click', scanWifi);
+  </script>
+</body>
+</html>

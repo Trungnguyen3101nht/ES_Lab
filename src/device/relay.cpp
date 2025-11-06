@@ -37,8 +37,7 @@ void handleWSMesOfRelay(void *arg, uint8_t *data, size_t len)
             relayNewState = state;
             newCommandRelay = true;
 
-            Serial.printf("👉 Received %s → Relay %d %s\n",
-                          msg.c_str(), index + 1, state ? "ON" : "OFF");
+            // Serial.printf("👉 Received %s → Relay %d %s\n",msg.c_str(), index + 1, state ? "ON" : "OFF");
         }
     }
 }

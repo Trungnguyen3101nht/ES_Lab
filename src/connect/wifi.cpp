@@ -6,53 +6,88 @@ String ssid, password;
 volatile bool shouldConnect = false;
 volatile bool apActive = false;
 
+void Led_control(int Ledstate)
+{
+  if (Ledstate == 0)
+  {
+    pixels.setPixelColor(0, pixels.Color(255, 0, 0));
+    pixels.show();
+  }
+  if (Ledstate == 1) // thiết bị đang ở trạng thái accesspoint
+  {
+    for (int i = 0; i < 6; i++)
+    {
+      pixels.setPixelColor(0, pixels.Color(255, 255, 255));
+      pixels.show();
+      vTaskDelay(pdMS_TO_TICKS(200));
+      pixels.clear();
+      pixels.show();
+      vTaskDelay(pdMS_TO_TICKS(200));
+    }
+  }
+  else if (Ledstate == 2) // thiết bị đang kết nối wifi
+  {
+    pixels.setPixelColor(0, pixels.Color(255, 255, 0)); // vàng nhấp nháy
+    pixels.show();
+    vTaskDelay(pdMS_TO_TICKS(150));
+    pixels.clear();
+    pixels.show();
+    vTaskDelay(pdMS_TO_TICKS(850));
+  }
+  else if (Ledstate == 3)
+  {
+    // thiết bị đang kết nối wifi
+    pixels.setPixelColor(0, pixels.Color(0, 255, 0)); // xanh lá
+    pixels.show();
+  }
+}
 // ================== HTML GIAO DIỆN CONFIG ==================
-const char *htmlPage = R"rawliteral(
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ESP32 WiFi Config</title>
-  <style>
-    body {
-      background: radial-gradient(circle at top, #111, #000);
-      color: #0ff;
-      font-family: 'Orbitron', sans-serif;
-      text-align: center;
-      margin: 0; padding: 0;
-    }
-    h2 { text-shadow: 0 0 10px #0ff; margin-top: 60px; }
-    form {
-      background: rgba(20,20,20,0.85);
-      border: 2px solid #0ff;
-      border-radius: 15px;
-      padding: 30px;
-      display: inline-block;
-      margin-top: 40px;
-    }
-    input {
-      margin: 10px; padding: 10px;
-      background: #111; border: 1px solid #0ff;
-      color: #0ff; border-radius: 5px; text-align: center;
-    }
-    input[type=submit] {
-      background: linear-gradient(90deg,#00ffff,#ff00ff);
-      color: black; font-weight: bold; border: none;
-      border-radius: 8px; cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-  <h2>⚡ ESP32 WiFi Config ⚡</h2>
-  <form action="/save" method="post">
-    <input type="text" name="ssid" placeholder="SSID"><br>
-    <input type="password" name="pass" placeholder="Password"><br>
-    <input type="submit" value="Lưu">
-  </form>
-</body>
-</html>
-)rawliteral";
+// const char *htmlPage = R"rawliteral(
+// <!DOCTYPE html>
+// <html lang="vi">
+// <head>
+//   <meta charset="UTF-8">
+//   <meta name="viewport" content="width=device-width, initial-scale=1">
+//   <title>ESP32 WiFi Config</title>
+//   <style>
+//     body {
+//       background: radial-gradient(circle at top, #111, #000);
+//       color: #0ff;
+//       font-family: 'Orbitron', sans-serif;
+//       text-align: center;
+//       margin: 0; padding: 0;
+//     }
+//     h2 { text-shadow: 0 0 10px #0ff; margin-top: 60px; }
+//     form {
+//       background: rgba(20,20,20,0.85);
+//       border: 2px solid #0ff;
+//       border-radius: 15px;
+//       padding: 30px;
+//       display: inline-block;
+//       margin-top: 40px;
+//     }
+//     input {
+//       margin: 10px; padding: 10px;
+//       background: #111; border: 1px solid #0ff;
+//       color: #0ff; border-radius: 5px; text-align: center;
+//     }
+//     input[type=submit] {
+//       background: linear-gradient(90deg,#00ffff,#ff00ff);
+//       color: black; font-weight: bold; border: none;
+//       border-radius: 8px; cursor: pointer;
+//     }
+//   </style>
+// </head>
+// <body>
+//   <h2>⚡ ESP32 WiFi Config ⚡</h2>
+//   <form action="/save" method="post">
+//     <input type="text" name="ssid" placeholder="SSID"><br>
+//     <input type="password" name="pass" placeholder="Password"><br>
+//     <input type="submit" value="Lưu">
+//   </form>
+// </body>
+// </html>
+// )rawliteral";
 
 // ================== TASK NÚT RESET ==================
 void buttonMonitorTask(void *parameter)
@@ -103,25 +138,21 @@ void connectWiFiTask(void *parameter)
 {
   Serial.println("🔄 Kết nối tới WiFi...");
 
-  WiFi.mode(WIFI_STA);
+  // WiFi.mode(WIFI_STA);
+  WiFi.mode(WIFI_AP_STA);
   WiFi.begin(ssid.c_str(), password.c_str());
 
   for (int retry = 0; WiFi.status() != WL_CONNECTED && retry < 20; retry++)
   {
-    pixels.setPixelColor(0, pixels.Color(255, 255, 0)); // vàng nhấp nháy
-    pixels.show();
-    vTaskDelay(pdMS_TO_TICKS(150));
-    pixels.clear();
-    pixels.show();
-    vTaskDelay(pdMS_TO_TICKS(850));
+    //?/
+    Led_control(2); // LED vàng nhấp nháy khi đang kết nối
     Serial.print(".");
   }
 
   if (WiFi.status() == WL_CONNECTED)
   {
-    pixels.setPixelColor(0, pixels.Color(0, 255, 0)); // xanh lá
-    pixels.show();
-
+    //?/
+    Led_control(3); // LED xanh lá khi đã kết nối thành công
     Serial.printf("\n✅ Đã kết nối WiFi!\nIP: %s\n", WiFi.localIP().toString().c_str());
 
     preferences.begin("wifi", false);
@@ -137,21 +168,56 @@ void connectWiFiTask(void *parameter)
   else
   {
     Serial.println("\n❌ Kết nối thất bại! Quay lại AP mode...");
-    for (int i = 0; i < 6; i++)
-    {
-      pixels.setPixelColor(0, pixels.Color(255, 0, 0));
-      pixels.show();
-      vTaskDelay(pdMS_TO_TICKS(200));
-      pixels.clear();
-      pixels.show();
-      vTaskDelay(pdMS_TO_TICKS(200));
-    }
-    shouldConnect = apActive = false;
-    vTaskDelay(pdMS_TO_TICKS(1500));
+
+    //?/
+    Led_control(0);
+    shouldConnect = false;
+    apActive = false;
+    pixels.clear();
+    pixels.show();
+    Serial.println("🔄 Chuyển sang Access Point mode...");
+    vTaskDelay(pdMS_TO_TICKS(2000));
     xTaskCreatePinnedToCore(apTask, "apTask", 8192, NULL, 4, NULL, 1);
   }
 
   vTaskDelete(NULL);
+}
+void wifiMonitorTask(void *parameter)
+{
+  for (;;)
+  {
+    if (WiFi.getMode() == WIFI_STA)
+    { // chỉ kiểm tra nếu đang ở chế độ STA
+      if (WiFi.status() != WL_CONNECTED)
+      {
+        Serial.println("⚠️ WiFi bị mất kết nối!");
+        Led_control(0); // 🔴 báo đỏ
+        int retry = 0;
+        WiFi.reconnect();
+        while (WiFi.status() != WL_CONNECTED && retry < 20)
+        {
+          Led_control(2); // 🟡 nhấp nháy trong lúc thử kết nối lại
+          vTaskDelay(pdMS_TO_TICKS(500));
+          retry++;
+        }
+        if (WiFi.status() == WL_CONNECTED)
+        {
+          Serial.println("✅ WiFi đã kết nối lại!");
+          Led_control(3); // 🟢 trở lại trạng thái bình thường
+        }
+        // else
+        // {
+        //   Serial.println("❌ Không kết nối lại được → quay về AP mode!");
+        //   WiFi.disconnect(true, true);
+        //   WiFi.mode(WIFI_OFF);
+        //   vTaskDelay(pdMS_TO_TICKS(500));
+        //   xTaskCreatePinnedToCore(apTask, "apTask", 8192, NULL, 4, NULL, 1);
+        //   vTaskDelete(NULL); // dừng monitor cũ
+        // }
+      }
+    }
+    vTaskDelay(pdMS_TO_TICKS(5000)); // kiểm tra mỗi 5 giây
+  }
 }
 
 // ================== TASK ACCESS POINT ==================
@@ -165,22 +231,44 @@ void apTask(void *parameter)
   apActive = true;
 
   WiFi.mode(WIFI_AP);
-  WiFi.softAP("ESP32_Config", "12345678");
-
+  WiFi.softAP(AP_ID, AP_PASS);
+  vTaskDelay(pdMS_TO_TICKS(500));
   // LED trắng nhấp nháy khi ở AP mode
   xTaskCreatePinnedToCore([](void *)
                           {
     while (apActive) {
-      pixels.setPixelColor(0, pixels.Color(255, 255, 255));
-      pixels.show(); vTaskDelay(pdMS_TO_TICKS(300));
-      pixels.clear(); pixels.show(); vTaskDelay(pdMS_TO_TICKS(300));
+      // pixels.setPixelColor(0, pixels.Color(255, 255, 255));
+      // pixels.show(); vTaskDelay(pdMS_TO_TICKS(300));
+      // pixels.clear(); pixels.show(); vTaskDelay(pdMS_TO_TICKS(300));
+      Led_control(1);
     }
     vTaskDelete(NULL); }, "apLedBlinkTask", 3072, NULL, 3, NULL, 1);
 
   Serial.printf("📶 Access Point đã bật! IP: %s\n", WiFi.softAPIP().toString().c_str());
 
   serverAP.on("/", HTTP_GET, [](AsyncWebServerRequest *req)
-              { req->send(200, "text/html", htmlPage); });
+              { req->send(LittleFS, "/AP_index.html", "text/html"); });
+  serverAP.on("/scan", HTTP_GET, [](AsyncWebServerRequest *req)
+              {
+  int n = WiFi.scanNetworks();
+  if (n == 0) {
+    req->send(200, "application/json", "[]");
+    return;
+  }
+
+  String json = "[";
+  for (int i = 0; i < n; ++i) {
+    if (i) json += ",";
+    json += "{";
+    json += "\"ssid\":\"" + WiFi.SSID(i) + "\",";
+    json += "\"rssi\":" + String(WiFi.RSSI(i)) + ",";
+    json += "\"secure\":" + String(WiFi.encryptionType(i) != WIFI_AUTH_OPEN ? "true" : "false");
+    json += "}";
+  }
+  json += "]";
+  req->send(200, "application/json", json);
+  WiFi.scanDelete(); });
+
   serverAP.on("/save", HTTP_POST, [](AsyncWebServerRequest *req)
               {
     if (req->hasParam("ssid", true) && req->hasParam("pass", true)) {
@@ -198,7 +286,8 @@ void apTask(void *parameter)
   {
     if (shouldConnect)
     {
-      shouldConnect = apActive = false;
+      shouldConnect = false;
+      apActive = false;
       pixels.clear();
       pixels.show();
 
@@ -238,4 +327,5 @@ void Wifi_init()
     Serial.printf("📡 Đã tìm thấy WiFi đã lưu: %s\n", ssid.c_str());
     xTaskCreatePinnedToCore(connectWiFiTask, "connectWiFiTask", 8192, NULL, 4, NULL, 1);
   }
+  xTaskCreatePinnedToCore(wifiMonitorTask, "wifiMonitorTask", 4096, NULL, 3, NULL, 1);
 }

@@ -230,7 +230,7 @@ void apTask(void *parameter)
   }
   apActive = true;
 
-  WiFi.mode(WIFI_AP);
+  WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(AP_ID, AP_PASS);
   vTaskDelay(pdMS_TO_TICKS(500));
   // LED trắng nhấp nháy khi ở AP mode

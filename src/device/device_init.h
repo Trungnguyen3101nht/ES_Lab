@@ -5,6 +5,7 @@
 #include "ledRGB.h"
 #include "tempandhumi.h"
 #include "relay.h"
+#include "soil.h"
 
 void Device_Init();
 

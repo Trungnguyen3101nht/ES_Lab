@@ -1,6 +1,27 @@
 #include "webserver.h"
 
 TaskHandle_t TaskWebServerHandle;
+void waitForWiFi()
+{
+    Serial.print("⏳ Đang kết nối WiFi");
+    int retries = 0;
+    while (WiFi.status() != WL_CONNECTED && retries < 30)
+    {
+        delay(500);
+        Serial.print(".");
+        retries++;
+    }
+    Serial.println();
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        Serial.print("✅ WiFi đã sẵn sàng, IP: ");
+        Serial.println(WiFi.localIP());
+    }
+    else
+    {
+        Serial.println("❌ Không thể kết nối WiFi!");
+    }
+}
 
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
              AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -33,7 +54,7 @@ void initWebServer()
         Serial.println("LittleFS mount failed!");
         return;
     }
-    if (WiFi.getMode() != WIFI_STA || WiFi.status() != WL_CONNECTED)
+    if (WiFi.getMode() != WIFI_AP_STA || WiFi.status() != WL_CONNECTED)
     {
         Serial.println("⚠️ WiFi chưa sẵn sàng, chưa khởi động WebServer!");
         return;
@@ -57,7 +78,7 @@ void initWebServer()
 
 void TaskWebServer(void *pvParameters)
 {
-
+    waitForWiFi();
     initWebServer();
     for (;;)
     {
@@ -74,7 +95,7 @@ void webServer_Init()
         "WebServerTask",
         8192,
         NULL,
-        2,
+        3,
         &TaskWebServerHandle,
         1);
 }

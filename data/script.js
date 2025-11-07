@@ -51,7 +51,9 @@ function handleMessage(raw) {
       document.getElementById("temp").textContent = data.temperature.toFixed(2);
       document.getElementById("humi").textContent = data.humidity.toFixed(2);
     }
-
+    if ("soil" in data) {
+      document.getElementById("soil").textContent = data.soil.toFixed(2);
+    }
     // 💡 Update LED state
     if ("led" in data) {
       const ledToggle = document.getElementById("ledToggle");

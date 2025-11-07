@@ -1,0 +1,5 @@
+#include "coreIOT.h"
+
+void coreIOT_init()
+{
+}

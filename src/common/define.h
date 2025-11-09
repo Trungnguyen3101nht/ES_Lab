@@ -8,7 +8,7 @@ extern AsyncWebSocket ws;
 
 extern Adafruit_NeoPixel pixels;
 
-#define AP_ID "YoloUno_Config_"
+#define AP_ID "ESP32YOLO HOHO"
 #define AP_PASS "88888888"
 
 #define REQUEST_QUEUE_LENGTH 10
@@ -16,12 +16,14 @@ extern Adafruit_NeoPixel pixels;
 #define BUF_SIZE 128
 
 #define RESET_BTN_PIN 0      // Nút BOOT
-#define RESET_HOLD_TIME 5000 // Giữ 5s để reset WiFi
+#define RESET_HOLD_TIME 2000 // Giữ 5s để reset WiFi
 
 #define LED_GPIO 45
-#define Relay_1 1
-#define Relay_2 2
-#define Relay_3 3
-#define Relay_4 4
+// #define Relay_1 1
+// #define Relay_2 2
+#define Relay_1 3
+#define Relay_2 4
+
+#define SOIL_PIN 1
 
 #endif // DEFINE_H

@@ -1,7 +1,7 @@
 #include "relay.h"
 
 constexpr int NUM_RELAYS = 4;
-const int relayPins[NUM_RELAYS] = {Relay_1, Relay_2, Relay_3, Relay_4};
+const int relayPins[NUM_RELAYS] = {Relay_1, Relay_2};
 
 bool relayState[NUM_RELAYS] = {false};
 bool newCommandRelay = false;
@@ -37,7 +37,7 @@ void handleWSMesOfRelay(void *arg, uint8_t *data, size_t len)
             relayNewState = state;
             newCommandRelay = true;
 
-            // Serial.printf("👉 Received %s → Relay %d %s\n",msg.c_str(), index + 1, state ? "ON" : "OFF");
+            Serial.printf("👉 Received %s → Relay %d %s\n", msg.c_str(), index + 1, state ? "ON" : "OFF");
         }
     }
 }
@@ -71,7 +71,7 @@ void Relay_Init()
         "TaskRelay",
         2048,
         NULL,
-        1,
+        3,
         NULL,
         1);
 }

@@ -16,6 +16,7 @@ void waitForWiFi()
     {
         Serial.print("✅ WiFi đã sẵn sàng, IP: ");
         Serial.println(WiFi.localIP());
+        currentLedState = LED_OK;
     }
     else
     {
@@ -36,11 +37,11 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
 
             // Serial.print("Received: ");
             // Serial.println(message);
-            if (message.startsWith("LED"))
-            {
-                handleWSMesOfLED(arg, data, len);
-            }
-            else if (message.startsWith("RELAY"))
+            // if (message.startsWith("LED"))
+            // {
+            //     handleWSMesOfLED(arg, data, len);
+            // }
+            if (message.startsWith("RELAY"))
             {
                 handleWSMesOfRelay(arg, data, len);
             }
@@ -49,12 +50,12 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
 }
 void initWebServer()
 {
-    if (!LittleFS.begin(true))
-    {
-        Serial.println("LittleFS mount failed!");
-        return;
-    }
-    if (WiFi.getMode() != WIFI_AP_STA || WiFi.status() != WL_CONNECTED)
+    // if (!LittleFS.begin(true))
+    // {
+    //     Serial.println("LittleFS mount failed!");
+    //     return;
+    // }
+    if (WiFi.status() != WL_CONNECTED)
     {
         Serial.println("⚠️ WiFi chưa sẵn sàng, chưa khởi động WebServer!");
         return;
@@ -89,6 +90,7 @@ void TaskWebServer(void *pvParameters)
 
 void webServer_Init()
 {
+    WiFi.mode(WIFI_STA); // BẮT BUỘC
 
     xTaskCreatePinnedToCore(
         TaskWebServer,
@@ -97,5 +99,5 @@ void webServer_Init()
         NULL,
         3,
         &TaskWebServerHandle,
-        1);
+        0);
 }

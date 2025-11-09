@@ -2,7 +2,16 @@
 #define LED_RGB_H
 #include "global.h"
 
-void createLedRGB();
+enum LedState
+{
+    LED_ERROR = 0,
+    LED_AP_MODE = 1,
+    LED_CONNECTING = 2,
+    LED_OK = 3
+};
+
+// ✅ PUBLIC biến trạng thái LED
+extern volatile LedState currentLedState;
+
 void LedRGB_Init();
-void handleWSMesOfLED(void *arg, uint8_t *data, size_t len);
 #endif // LED_RGB_H

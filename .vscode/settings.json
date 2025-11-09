@@ -21,7 +21,8 @@
         "utility": "cpp",
         "thread": "cpp",
         "stdexcept": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "*.example": "cpp"
     },
     "cmake.ignoreCMakeListsMissing": true
 }

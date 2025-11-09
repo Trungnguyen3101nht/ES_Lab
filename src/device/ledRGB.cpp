@@ -1,77 +1,62 @@
 #include "ledRGB.h"
 
-bool ledState = false;
-bool newCommand = false;
+// enum LedState
+// {
+//     LED_ERROR = 0,      // đỏ
+//     LED_AP_MODE = 1,    // trắng nháy
+//     LED_CONNECTING = 2, // vàng nháy
+//     LED_OK = 3          // xanh
+// };
 
-void createLedRGB()
-{
-    pixels.begin();
-    pixels.setBrightness(255);
-    pixels.clear();
-    pixels.show();
-}
+volatile LedState currentLedState = LED_ERROR;
 
-void writeLedstate()
-{
-    DynamicJsonDocument doc(128);
-    doc["led"] = ledState;
-    String json;
-    serializeJson(doc, json);
-    ws.textAll(json);
-}
-
-void handleWSMesOfLED(void *arg, uint8_t *data, size_t len)
-{
-    String msg = (char *)data;
-
-    if (msg.startsWith("LED"))
-    {
-        if (msg.endsWith("_ON"))
-        {
-            ledState = true;
-            newCommand = true;
-            // Serial.println("👉 Received LED_ON");
-        }
-        else if (msg.endsWith("_OFF"))
-        {
-            ledState = false;
-            newCommand = true;
-            // Serial.println("👉 Received LED_OFF");
-        }
-    }
-}
-
-void TaskGPIO(void *pvParameters)
+void LedTask(void *parameter)
 {
     for (;;)
     {
-        if (newCommand)
+        switch (currentLedState)
         {
-            if (ledState)
-            {
-                pixels.setPixelColor(0, pixels.Color(255, 0, 255)); // tím
-            }
-            else
-            {
-                pixels.setPixelColor(0, pixels.Color(0, 0, 0)); // tắt
-            }
+        case LED_ERROR: // đỏ đứng yên
+            pixels.setPixelColor(0, pixels.Color(255, 0, 0));
             pixels.show();
-            writeLedstate();
-            newCommand = false;
+            vTaskDelay(pdMS_TO_TICKS(200));
+            break;
+
+        case LED_AP_MODE: // trắng nhấp nháy
+            pixels.setPixelColor(0, pixels.Color(255, 255, 255));
+            pixels.show();
+            vTaskDelay(pdMS_TO_TICKS(200));
+            pixels.clear();
+            pixels.show();
+            vTaskDelay(pdMS_TO_TICKS(200));
+            break;
+
+        case LED_CONNECTING: // vàng nhịp chậm
+            pixels.setPixelColor(0, pixels.Color(255, 255, 0));
+            pixels.show();
+            vTaskDelay(pdMS_TO_TICKS(150));
+            pixels.clear();
+            pixels.show();
+            vTaskDelay(pdMS_TO_TICKS(850));
+            break;
+
+        case LED_OK: // xanh đứng yên
+            pixels.setPixelColor(0, pixels.Color(0, 255, 0));
+            pixels.show();
+            vTaskDelay(pdMS_TO_TICKS(500));
+            break;
         }
-        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
 void LedRGB_Init()
 {
-    createLedRGB();
     xTaskCreatePinnedToCore(
-        TaskGPIO,
-        "TaskGPIO",
+        LedTask,
+        "LedTask",
         2048,
         NULL,
         1,
         NULL,
-        1);
+        0);
 }

@@ -22,8 +22,8 @@ function initWebSocket() {
 
 function setupUI() {
   // 🔘 LED toggle
-  const ledToggle = document.getElementById("ledToggle");
-  ledToggle.onchange = () => sendCommand(ledToggle.checked ? "LED_ON" : "LED_OFF");
+  // const ledToggle = document.getElementById("ledToggle");
+  // ledToggle.onchange = () => sendCommand(ledToggle.checked ? "LED_ON" : "LED_OFF");
 
   // 🔲 Relay toggles (RELAY1...RELAY4)
   for (let i = 1; i <= 4; i++) {
@@ -55,12 +55,12 @@ function handleMessage(raw) {
       document.getElementById("soil").textContent = data.soil.toFixed(2);
     }
     // 💡 Update LED state
-    if ("led" in data) {
-      const ledToggle = document.getElementById("ledToggle");
-      const status = document.getElementById("status");
-      ledToggle.checked = data.led;
-      status.textContent = data.led ? "LED ON" : "LED OFF";
-    }
+    // if ("led" in data) {
+    //   const ledToggle = document.getElementById("ledToggle");
+    //   const status = document.getElementById("status");
+    //   ledToggle.checked = data.led;
+    //   status.textContent = data.led ? "LED ON" : "LED OFF";
+    // }
 
     // ⚙️ Update relay states
     if ("relays" in data) {

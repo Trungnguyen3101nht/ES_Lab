@@ -1,16 +1,16 @@
 #include "soil.h"
-float sensorValue = 0;
-#define SOIL_PIN 2 // hoặc 34, 32... tùy chân ADC bạn dùng
+float sensorSoilValue = 0;
+
 void readSoil()
 {
     int maxSoilValue = 4095; // giá trị ướt nhất (thay đổi tùy theo cảm biến và mạch)
     int minSoilValue = 0;    // giá trị khô nhất (thay đổi tùy theo cảm biến và mạch)
     float SoilValueraw = analogRead(SOIL_PIN);
-    int soilPercent = (SoilValueraw / maxSoilValue) * 100;
+    float soilPercent = (SoilValueraw / maxSoilValue) * 100;
     // float SoilValue = analogRead(SOIL_PIN);
     if (soilPercent >= 0)
     {
-        sensorValue = soilPercent;
+        sensorSoilValue = soilPercent;
     }
 }
 void TaskSoil(void *pvParameters)
@@ -24,9 +24,9 @@ void TaskSoil(void *pvParameters)
         {
             if (ws.count() > 0)
             {
-                String data = "{\"soil\":" + String(sensorValue, 2) + "}";
+                String data = "{\"soil\":" + String(sensorSoilValue, 2) + "}";
                 ws.textAll(data);
-                Serial.println(data);
+                // Serial.println(data);
             }
         }
         vTaskDelay(pdMS_TO_TICKS(1000));

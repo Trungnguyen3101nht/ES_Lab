@@ -26,4 +26,6 @@ extern Adafruit_NeoPixel pixels;
 
 #define SOIL_PIN 1
 
+#define NUM_RELAYS 4
+
 #endif // DEFINE_H

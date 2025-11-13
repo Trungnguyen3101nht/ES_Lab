@@ -5,6 +5,6 @@
 #include "../device/tempandhumi.h"
 
 extern PubSubClient client;
-
+void sendRelayStateToCore();
 void coreIOT_init();
 #endif // CORE_IOT_H

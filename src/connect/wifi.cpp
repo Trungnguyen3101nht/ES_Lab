@@ -84,20 +84,20 @@ void connectWiFiTask(void *parameter)
     vTaskDelay(pdMS_TO_TICKS(100));
     webServer_Init();
   }
-  else
-  {
-    Serial.println("\n❌ Kết nối thất bại! Quay lại AP mode...");
+  // else
+  // {
+  //   Serial.println("\n❌ Kết nối thất bại! Quay lại AP mode...");
 
-    //?/
-    currentLedState = LED_ERROR;
+  //   //?/
+  //   currentLedState = LED_ERROR;
 
-    shouldConnect = false;
-    apActive = false;
+  //   shouldConnect = false;
+  //   apActive = false;
 
-    Serial.println("🔄 Chuyển sang Access Point mode...");
-    vTaskDelay(pdMS_TO_TICKS(2000));
-    xTaskCreatePinnedToCore(apTask, "apTask", 8192, NULL, 4, NULL, 1);
-  }
+  //   Serial.println("🔄 Chuyển sang Access Point mode...");
+  //   vTaskDelay(pdMS_TO_TICKS(2000));
+  //   xTaskCreatePinnedToCore(apTask, "apTask", 8192, NULL, 4, NULL, 1);
+  // }
 
   vTaskDelete(NULL);
 }

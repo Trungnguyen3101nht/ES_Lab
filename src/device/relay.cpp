@@ -1,12 +1,10 @@
 #include "relay.h"
 
-constexpr int NUM_RELAYS = 4;
-const int relayPins[NUM_RELAYS] = {Relay_1, Relay_2};
-
-bool relayState[NUM_RELAYS] = {false};
 bool newCommandRelay = false;
 int relayIndex = -1;
 bool relayNewState = false;
+bool relayState[NUM_RELAYS] = {false};
+const int relayPins[NUM_RELAYS] = {Relay_1, Relay_2};
 
 // Gửi trạng thái tất cả relay về client
 void writeRelayState()
@@ -19,6 +17,37 @@ void writeRelayState()
     String json;
     serializeJson(doc, json);
     ws.textAll(json);
+}
+#include <ArduinoJson.h>
+
+void handleRelayUpdate(const char *payload)
+{
+    StaticJsonDocument<128> doc; // hoặc JsonDocument doc; nếu dùng ArduinoJson v7+
+    DeserializationError error = deserializeJson(doc, payload);
+
+    if (error)
+    {
+        Serial.print("❌ JSON parse failed: ");
+        Serial.println(error.c_str());
+        return;
+    }
+
+    // Duyệt qua tất cả relay
+    for (int i = 0; i < NUM_RELAYS; i++)
+    {
+        String key = "stateRelay" + String(i + 1);
+        if (!doc[key].isNull())
+        {
+            bool state = doc[key].as<bool>();
+            relayState[i] = state;
+            digitalWrite(relayPins[i], state ? HIGH : LOW);
+
+            Serial.printf("🔁 Relay %d -> %s\n", i + 1, state ? "ON" : "OFF");
+        }
+    }
+
+    // Nếu dùng WebSocket, cập nhật lại client
+    writeRelayState();
 }
 
 // Xử lý lệnh WebSocket
@@ -36,6 +65,7 @@ void handleWSMesOfRelay(void *arg, uint8_t *data, size_t len)
             relayIndex = index;
             relayNewState = state;
             newCommandRelay = true;
+            sendRelayStateToCore(); // 🟢 Gửi trạng thái ban đầu lên Core IOT
 
             Serial.printf("👉 Received %s → Relay %d %s\n", msg.c_str(), index + 1, state ? "ON" : "OFF");
         }
@@ -65,6 +95,7 @@ void Relay_Init()
         pinMode(pin, OUTPUT);
         digitalWrite(pin, LOW);
     }
+    sendRelayStateToCore(); // 🟢 Gửi trạng thái ban đầu lên Core IOT
 
     xTaskCreatePinnedToCore(
         TaskRelay,

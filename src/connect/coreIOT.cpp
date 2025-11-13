@@ -2,8 +2,8 @@
 
 const char *mqtt_server = "app.coreiot.io";
 const int mqtt_port = 1883;
-const char *clientId = "Assignment ESys";
-const char *username = "w6vg9vsbydh5liar0yyj";
+const char *clientId = "[ESys]";
+const char *username = "OJLyZ0902TxctlHBXdhq";
 const char *passID = "";
 
 WiFiClient espClient;
@@ -14,22 +14,46 @@ SemaphoreHandle_t soilMutex;
 SemaphoreHandle_t tempMutex;
 SemaphoreHandle_t humiMutex;
 unsigned long lastSend = 0;
+String MesUpdate;
+String lastJson(const String &msg)
+{
+    int lastOpen = msg.lastIndexOf('{');
+    int lastClose = msg.lastIndexOf('}');
+
+    if (lastOpen >= 0 && lastClose >= 0 && lastClose > lastOpen)
+    {
+        return msg.substring(lastOpen, lastClose + 1);
+    }
+
+    return ""; // không tìm thấy
+}
+
 void mqttCallback(char *topic, byte *payload, unsigned int length)
 {
-    String msg;
+
     for (int i = 0; i < length; i++)
-        msg += (char)payload[i];
+        MesUpdate += (char)payload[i];
 
-    Serial.printf("📥 [%s]: %s\n", topic, msg.c_str());
-
+    // Serial.printf("📥hhehe [%s]: %s\n", topic, MesUpdate.c_str());
+    // Serial.println(MesUpdate.c_str());
+    if (String(topic) == "v1/devices/me/attributes")
+    {
+        String jsonStr = lastJson(MesUpdate); // lấy JSON cuối
+        if (jsonStr.length() > 0)
+        {
+            handleRelayUpdate(jsonStr.c_str());
+        }
+    }
     if (String(topic).startsWith("v1/devices/me/rpc/request/"))
     {
         // Extract request ID
         String requestId = String(topic).substring(26);
 
         // Example RPC: {"method":"setValue","params":42}
-        StaticJsonDocument<256> doc;
-        deserializeJson(doc, msg);
+        // StaticJsonDocument<256> doc;
+        JsonDocument doc;
+
+        deserializeJson(doc, MesUpdate);
 
         String method = doc["method"];
         int value = doc["params"];
@@ -39,6 +63,32 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
         String respTopic = "v1/devices/me/rpc/response/" + requestId;
 
         client.publish(respTopic.c_str(), response.c_str(), true);
+    }
+
+    if (String(topic) == "v1/devices/me/attributes")
+    {
+        // StaticJsonDocument<256> doc;
+        JsonDocument doc;
+
+        deserializeJson(doc, MesUpdate);
+
+        if (!doc["shared"].isNull())
+        {
+            JsonObject shared = doc["shared"];
+            if (!shared["relays"].isNull())
+            {
+                JsonArray arr = shared["relays"];
+                for (int i = 0; i < arr.size() && i < NUM_RELAYS; i++)
+                {
+                    relayState[i] = arr[i];
+                    digitalWrite(relayPins[i], relayState[i] ? HIGH : LOW);
+                }
+                Serial.println("🔁 Updated relays from Core IOT");
+
+                // Gửi ngược lại cho WebSocket client
+                writeRelayState();
+            }
+        }
     }
 }
 
@@ -58,16 +108,42 @@ float safeRead(float *var, SemaphoreHandle_t mutex)
     }
     return value;
 }
+void sendRelayStateToCore()
+{
+    JsonDocument doc;
+
+    for (int i = 0; i < NUM_RELAYS; i++)
+    {
+        String key = "relay" + String(i + 1);
+        doc[key] = relayState[i];
+    }
+
+    char payload[256];
+    serializeJson(doc, payload);
+    client.publish("v1/devices/me/attributes", payload, true);
+
+    // Serial.printf("📤1 Sent relay states to Core IOT: %s\n", payload);
+}
 
 void sendTelemetry(float temperature, float humidity, float soil)
 {
-    String payload = "{\"temperature\":" + String(temperature, 1) +
-                     ",\"humidity\":" + String(humidity, 1) +
-                     ",\"soil\":" + String(soil, 1) + "}";
+    // String payload = "{\"temperature\":" + String(temperature, 1) +
+    //                  ",\"humidity\":" + String(humidity, 1) +
+    //                  ",\"soil\":" + String(soil, 1) + "}";
 
-    Serial.print("📤 Sending payload: ");
-    Serial.println(payload);
-    client.publish("v1/devices/me/telemetry", payload.c_str(), true);
+    // StaticJsonDocument<128> doc;
+    JsonDocument doc;
+
+    doc["temperature"] = temperature;
+    doc["humidity"] = humidity;
+    doc["soil"] = soil;
+
+    char payload[128];
+    serializeJson(doc, payload);
+
+    // Serial.print("📤2 Sending payload: ");
+    // Serial.println(payload);
+    client.publish("v1/devices/me/attributes", payload, true);
 }
 void reconnectMQTT()
 {
@@ -80,6 +156,7 @@ void reconnectMQTT()
             Serial.println("✅ Connected!");
             client.subscribe("v1/devices/me/rpc/request/+");
             client.subscribe("v1/devices/me/attributes");
+            client.publish("v1/devices/me/attributes/request/1", "{\"sharedKeys\":\"relays\"}");
         }
         else
         {

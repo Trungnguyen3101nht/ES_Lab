@@ -41,54 +41,6 @@ void Led_control(int Ledstate)
     pixels.show();
   }
 }
-// ================== HTML GIAO DIỆN CONFIG ==================
-// const char *htmlPage = R"rawliteral(
-// <!DOCTYPE html>
-// <html lang="vi">
-// <head>
-//   <meta charset="UTF-8">
-//   <meta name="viewport" content="width=device-width, initial-scale=1">
-//   <title>ESP32 WiFi Config</title>
-//   <style>
-//     body {
-//       background: radial-gradient(circle at top, #111, #000);
-//       color: #0ff;
-//       font-family: 'Orbitron', sans-serif;
-//       text-align: center;
-//       margin: 0; padding: 0;
-//     }
-//     h2 { text-shadow: 0 0 10px #0ff; margin-top: 60px; }
-//     form {
-//       background: rgba(20,20,20,0.85);
-//       border: 2px solid #0ff;
-//       border-radius: 15px;
-//       padding: 30px;
-//       display: inline-block;
-//       margin-top: 40px;
-//     }
-//     input {
-//       margin: 10px; padding: 10px;
-//       background: #111; border: 1px solid #0ff;
-//       color: #0ff; border-radius: 5px; text-align: center;
-//     }
-//     input[type=submit] {
-//       background: linear-gradient(90deg,#00ffff,#ff00ff);
-//       color: black; font-weight: bold; border: none;
-//       border-radius: 8px; cursor: pointer;
-//     }
-//   </style>
-// </head>
-// <body>
-//   <h2>⚡ ESP32 WiFi Config ⚡</h2>
-//   <form action="/save" method="post">
-//     <input type="text" name="ssid" placeholder="SSID"><br>
-//     <input type="password" name="pass" placeholder="Password"><br>
-//     <input type="submit" value="Lưu">
-//   </form>
-// </body>
-// </html>
-// )rawliteral";
-
 // ================== TASK NÚT RESET ==================
 void buttonMonitorTask(void *parameter)
 {

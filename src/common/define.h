@@ -1,6 +1,14 @@
 #ifndef DEFINE_H
 #define DEFINE_H
 
+typedef struct
+{
+    int cmdType;   // 1 = LED, 2 = RELAY, 3 = SENSOR temp/humi
+    float Value01; // ví dụ: nhiệt độ
+    float Value02; // ví dụ: độ ẩm
+} CommandMsg_t;
+extern QueueHandle_t commandQueue;
+
 #define REQUEST_QUEUE_LENGTH 10
 #define UART_NUM UART_NUM_0
 #define BUF_SIZE 128

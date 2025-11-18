@@ -23,21 +23,46 @@ void TaskTempAndHumi(void *pvParameters)
     while (true)
     {
         DHT20_sensor();
+        CommandMsg_t msg;
+        msg.cmdType = 3; // 3 = SENSOR temp/humi
+        msg.Value01 = temperature;
+        msg.Value02 = humidity;
 
-        if (WiFi.status() == WL_CONNECTED)
-        {
-            if (ws.count() > 0)
-            {
-                String data = "{\"temperature\":" + String(temperature, 2) + ",\"humidity\":" + String(humidity, 2) + "}";
-                ws.textAll(data);
-                // Serial.println(data);
-            }
-        }
+        xQueueSendToBack(commandQueue, &msg, 0);
+
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
+void TaskSensorWebSocket(void *pv)
+{
+    CommandMsg_t msg;
+
+    while (1)
+    {
+        if (xQueueReceive(commandQueue, &msg, portMAX_DELAY))
+        {
+            if (msg.cmdType == 3)
+            {
+                String json = "{\"temperature\":" + String(msg.Value01, 2) +
+                              ",\"humidity\":" + String(msg.Value02, 2) + "}";
+
+                if (ws.count() > 0)
+                    ws.textAll(json);
+            }
+        }
+    }
+}
+
 void TempandHumi_init()
 {
+    xTaskCreatePinnedToCore(TaskSensorWebSocket,
+                            "SensorWS",
+                            4096,
+                            NULL,
+                            2,
+                            NULL,
+                            1);
+
     xTaskCreatePinnedToCore(
         TaskTempAndHumi,
         "TaskTempAndHumi",

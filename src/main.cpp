@@ -7,6 +7,7 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
 Adafruit_NeoPixel pixels(1, LED_GPIO, NEO_GRB + NEO_KHZ800);
+QueueHandle_t commandQueue = NULL;
 
 void setup()
 {

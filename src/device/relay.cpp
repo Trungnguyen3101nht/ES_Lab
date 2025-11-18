@@ -28,33 +28,36 @@ void handleWSMesOfRelay(void *arg, uint8_t *data, size_t len)
 
     if (msg.startsWith("RELAY"))
     {
-        int index = msg.substring(5, 6).toInt() - 1; // RELAY1 → index = 0
-        if (index >= 0 && index < NUM_RELAYS)
-        {
-            bool state = msg.endsWith("_ON");
-            relayState[index] = state;
-            relayIndex = index;
-            relayNewState = state;
-            newCommandRelay = true;
+        int index = msg.substring(5, 6).toInt() - 1;
+        bool state = msg.endsWith("_ON");
 
-            Serial.printf("👉 Received %s → Relay %d %s\n",
-                          msg.c_str(), index + 1, state ? "ON" : "OFF");
-        }
+        CommandMsg_t cmd;
+        cmd.cmdType = 2; // 2 = RELAY
+        cmd.Value01 = index;
+        cmd.Value02 = state;
+
+        xQueueSendToBack(commandQueue, &cmd, 0);
     }
 }
 
-// Task điều khiển relay
 void TaskRelay(void *pvParameters)
 {
+
+    CommandMsg_t cmd;
     for (;;)
     {
-        if (newCommandRelay && relayIndex >= 0 && relayIndex < NUM_RELAYS)
+        if (xQueueReceive(commandQueue, &cmd, portMAX_DELAY))
         {
-            digitalWrite(relayPins[relayIndex], relayNewState ? HIGH : LOW);
-            writeRelayState();
-            newCommandRelay = false;
+            if (cmd.cmdType == 2) // Relay command
+            {
+                digitalWrite(relayPins[(int)cmd.Value01],
+                             cmd.Value02 ? HIGH : LOW);
+
+                relayState[(int)cmd.Value01] = cmd.Value02;
+
+                writeRelayState();
+            }
         }
-        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 

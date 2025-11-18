@@ -23,19 +23,20 @@ void writeLedstate()
 void handleWSMesOfLED(void *arg, uint8_t *data, size_t len)
 {
     String msg = (char *)data;
+    bool state;
 
     if (msg.startsWith("LED"))
     {
         if (msg.endsWith("_ON"))
         {
-            ledState = true;
-            newCommand = true;
+            state = true;
+            xQueueSend(commandQueue, &state, 0);
             Serial.println("👉 Received LED_ON");
         }
         else if (msg.endsWith("_OFF"))
         {
-            ledState = false;
-            newCommand = true;
+            state = false;
+            xQueueSend(commandQueue, &state, 0);
             Serial.println("👉 Received LED_OFF");
         }
     }
@@ -43,23 +44,27 @@ void handleWSMesOfLED(void *arg, uint8_t *data, size_t len)
 
 void TaskGPIO(void *pvParameters)
 {
+    bool command;
+
     for (;;)
     {
-        if (newCommand)
+        // Chờ lệnh mới từ queue
+        if (xQueueReceive(commandQueue, &command, portMAX_DELAY) == pdPASS)
         {
+            ledState = command;
+
             if (ledState)
             {
-                pixels.setPixelColor(0, pixels.Color(255, 0, 255)); // tím
+                pixels.setPixelColor(0, pixels.Color(255, 0, 255));
             }
             else
             {
-                pixels.setPixelColor(0, pixels.Color(0, 0, 0)); // tắt
+                pixels.setPixelColor(0, pixels.Color(0, 0, 0));
             }
+
             pixels.show();
             writeLedstate();
-            newCommand = false;
         }
-        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 

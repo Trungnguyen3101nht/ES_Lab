@@ -8,7 +8,7 @@
 //   while (1)
 //   {
 //     Serial.println("Task 1 running");
-//     vTaskDelay(pdMS_TO_TICKS(100));
+//     vTaskDelay(pdMS_TO_TICKS(1000));
 //   }
 // }
 
@@ -17,7 +17,7 @@
 //   while (1)
 //   {
 //     Serial.println("Task 2 running");
-//     vTaskDelay(pdMS_TO_TICKS(100));
+//     vTaskDelay(pdMS_TO_TICKS(1000));
 //   }
 // }
 
@@ -60,28 +60,28 @@
 
 //-----------------------------------------------------------------------------
 // Co-operative Scheduling
-// void coopTask1(void *pv)
-// {
-//   while (1)
-//   {
-//     Serial.println("Task 1 run...");
-//     vTaskDelay(1000 / portTICK_PERIOD_MS);
-//   }
-// }
+void coopTask1(void *pv)
+{
+  while (1)
+  {
+    Serial.println("Task 1 run...");
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+}
 
-// void coopTask2(void *pv)
-// {
-//   while (1)
-//   {
-//     Serial.println("Task 2 run...");
-//     vTaskDelay(1000 / portTICK_PERIOD_MS);
-//   }
-// }
+void coopTask2(void *pv)
+{
+  while (1)
+  {
+    Serial.println("Task 2 run...");
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+}
 
-// void setup()
-// {
-//   Serial.begin(115200);
-//   xTaskCreate(coopTask1, "Coop1", 2048, NULL, 1, NULL);
-//   xTaskCreate(coopTask2, "Coop2", 2048, NULL, 1, NULL);
-// }
-// void loop() {}
+void setup()
+{
+  Serial.begin(115200);
+  xTaskCreate(coopTask1, "Coop1", 2048, NULL, 1, NULL);
+  xTaskCreate(coopTask2, "Coop2", 2048, NULL, 1, NULL);
+}
+void loop() {}

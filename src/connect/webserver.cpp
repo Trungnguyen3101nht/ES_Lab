@@ -10,8 +10,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
         AwsFrameInfo *info = (AwsFrameInfo *)arg;
         if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
         {
-            data[len] = 0;
-            String message = (char *)data;
+            String message = String((char *)data, len);
 
             // Serial.print("Received: ");
             Serial.println(message);
@@ -26,6 +25,47 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
         }
     }
 }
+void TaskProcessCommands(void *pv)
+{
+    CommandMsg_t cmd;
+    for (;;)
+    {
+        if (xQueueReceive(commandQueue, &cmd, portMAX_DELAY) == pdPASS)
+        {
+            switch (cmd.cmdType)
+            {
+            case 1: // LED
+                ledState = cmd.Value01 != 0;
+                if (ledState)
+                    pixels.setPixelColor(0, pixels.Color(255, 0, 255));
+                else
+                    pixels.setPixelColor(0, pixels.Color(0, 0, 0));
+                pixels.show();
+                writeLedstate();
+                break;
+
+            case 2: // RELAY
+                digitalWrite(relayPins[(int)cmd.Value01], cmd.Value02 ? HIGH : LOW);
+                relayState[(int)cmd.Value01] = cmd.Value02;
+                writeRelayState();
+                break;
+
+            case 3: // SENSOR
+            {
+                String json = "{\"temperature\":" + String(cmd.Value01, 2) +
+                              ",\"humidity\":" + String(cmd.Value02, 2) + "}";
+                if (ws.count() > 0)
+                    ws.textAll(json);
+                break;
+            }
+
+            default:
+                break;
+            }
+        }
+    }
+}
+
 void initWebServer()
 {
 
@@ -60,6 +100,7 @@ void TaskWebServer(void *pvParameters)
 
 void webServer_Init()
 {
+    xTaskCreatePinnedToCore(TaskProcessCommands, "ProcessCmds", 4096, NULL, 2, NULL, 1);
     xTaskCreatePinnedToCore(
         TaskWebServer,
         "WebServerTask",

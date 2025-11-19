@@ -1,7 +1,7 @@
 #include "global.h"
 
-const char *ssid = "ACLAB";
-const char *password = "ACLAB2023";
+const char *ssid = "Nhaxe 42/36/21A";
+const char *password = "88888888";
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
@@ -12,7 +12,7 @@ QueueHandle_t commandQueue = NULL;
 void setup()
 {
   Serial.begin(115200);
-
+  commandQueue = xQueueCreate(20, sizeof(CommandMsg_t));
   if (!LittleFS.begin(true))
   {
     Serial.println("LittleFS mount failed!");

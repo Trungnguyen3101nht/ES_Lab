@@ -35,21 +35,22 @@ void TaskTempAndHumi(void *pvParameters)
 }
 void TaskSensorWebSocket(void *pv)
 {
+    // Wire.begin(MY_SCL, MY_SDA);
+    // Wire.setClock(100000);
+    // dht20.begin();
+
     CommandMsg_t msg;
+    msg.cmdType = 3;
 
-    while (1)
+    while (true)
     {
-        if (xQueueReceive(commandQueue, &msg, portMAX_DELAY))
+        if (dht20.read() == DHT20_OK)
         {
-            if (msg.cmdType == 3)
-            {
-                String json = "{\"temperature\":" + String(msg.Value01, 2) +
-                              ",\"humidity\":" + String(msg.Value02, 2) + "}";
-
-                if (ws.count() > 0)
-                    ws.textAll(json);
-            }
+            msg.Value01 = dht20.getTemperature();
+            msg.Value02 = dht20.getHumidity();
+            xQueueSendToBack(commandQueue, &msg, 0);
         }
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 

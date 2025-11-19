@@ -3,9 +3,9 @@
 
 typedef struct
 {
-    int cmdType;   // 1 = LED, 2 = RELAY, 3 = SENSOR temp/humi
-    float Value01; // ví dụ: nhiệt độ
-    float Value02; // ví dụ: độ ẩm
+    int cmdType; // 1 = LED, 2 = RELAY, 3 = SENSOR temp/humi
+    float Value01;
+    float Value02;
 } CommandMsg_t;
 extern QueueHandle_t commandQueue;
 

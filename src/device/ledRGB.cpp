@@ -1,7 +1,7 @@
 #include "ledRGB.h"
 
-bool ledState = false;
-bool newCommand = false;
+bool ledState = false; // biến LED
+// commandQueue khai báo ở global, khởi tạo ở main hoặc nơi init FreeRTOS
 
 void createLedRGB()
 {
@@ -22,48 +22,43 @@ void writeLedstate()
 
 void handleWSMesOfLED(void *arg, uint8_t *data, size_t len)
 {
-    String msg = (char *)data;
-    bool state;
+    String msg = String((char *)data, len);
+    CommandMsg_t cmd;
+    cmd.cmdType = 1; // LED command
 
-    if (msg.startsWith("LED"))
-    {
-        if (msg.endsWith("_ON"))
-        {
-            state = true;
-            xQueueSend(commandQueue, &state, 0);
-            Serial.println("👉 Received LED_ON");
-        }
-        else if (msg.endsWith("_OFF"))
-        {
-            state = false;
-            xQueueSend(commandQueue, &state, 0);
-            Serial.println("👉 Received LED_OFF");
-        }
-    }
+    if (msg.endsWith("_ON"))
+        cmd.Value01 = 1;
+    else if (msg.endsWith("_OFF"))
+        cmd.Value01 = 0;
+    else
+        return;
+
+    cmd.Value02 = 0;
+    xQueueSend(commandQueue, &cmd, 0);
 }
 
 void TaskGPIO(void *pvParameters)
 {
-    bool command;
+    CommandMsg_t command;
 
     for (;;)
     {
         // Chờ lệnh mới từ queue
         if (xQueueReceive(commandQueue, &command, portMAX_DELAY) == pdPASS)
         {
-            ledState = command;
-
-            if (ledState)
+            if (command.cmdType == 1) // LED
             {
-                pixels.setPixelColor(0, pixels.Color(255, 0, 255));
-            }
-            else
-            {
-                pixels.setPixelColor(0, pixels.Color(0, 0, 0));
-            }
+                ledState = command.Value01 > 0.5 ? true : false;
 
-            pixels.show();
-            writeLedstate();
+                if (ledState)
+                    pixels.setPixelColor(0, pixels.Color(255, 0, 255));
+                else
+                    pixels.setPixelColor(0, pixels.Color(0, 0, 0));
+
+                pixels.show();
+                writeLedstate();
+            }
+            // Có thể thêm các loại cmdType khác ở đây
         }
     }
 }

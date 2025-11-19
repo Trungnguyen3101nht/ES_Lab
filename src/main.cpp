@@ -11,6 +11,9 @@ QueueHandle_t commandQueue = NULL;
 
 void setup()
 {
+  Wire.begin(MY_SCL, MY_SDA);
+  Wire.setClock(100000);
+
   Serial.begin(115200);
   commandQueue = xQueueCreate(20, sizeof(CommandMsg_t));
   if (!LittleFS.begin(true))

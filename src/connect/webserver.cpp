@@ -100,7 +100,7 @@ void TaskWebServer(void *pvParameters)
 
 void webServer_Init()
 {
-    xTaskCreatePinnedToCore(TaskProcessCommands, "ProcessCmds", 4096, NULL, 2, NULL, 1);
+    xTaskCreatePinnedToCore(TaskProcessCommands, "ProcessCmds", 4096, NULL, 4, NULL, 1);
     xTaskCreatePinnedToCore(
         TaskWebServer,
         "WebServerTask",

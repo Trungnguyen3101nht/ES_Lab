@@ -6,11 +6,23 @@ bool relayNewState = false;
 bool relayState[NUM_RELAYS] = {false};
 const int relayPins[NUM_RELAYS] = {Relay_1, Relay_2};
 
+// Schedule
+
+typedef struct
+{
+    int relayIndex;     // Relay nào (0 → NUM_RELAYS-1)
+    bool state;         // Bật / Tắt
+    uint32_t executeAt; // thời điểm thực thi (millis)
+} RelaySchedule;
+
+QueueHandle_t relayScheduleQueue;
+
 // Gửi trạng thái tất cả relay về client
 void writeRelayState()
 {
-    DynamicJsonDocument doc(256);
-    JsonArray arr = doc.createNestedArray("relays");
+    JsonDocument doc;
+
+    JsonArray arr = doc["relays"].to<JsonArray>();
     for (bool state : relayState)
         arr.add(state);
 
@@ -18,11 +30,35 @@ void writeRelayState()
     serializeJson(doc, json);
     ws.textAll(json);
 }
-#include <ArduinoJson.h>
+
+void TaskRelayScheduler(void *pvParameters)
+{
+    RelaySchedule job;
+
+    for (;;)
+    {
+        if (xQueueReceive(relayScheduleQueue, &job, pdMS_TO_TICKS(100)))
+        {
+            // chờ đúng thời điểm
+            while (millis() < job.executeAt)
+                vTaskDelay(pdMS_TO_TICKS(50));
+
+            // Thực thi job
+            if (job.relayIndex >= 0 && job.relayIndex < NUM_RELAYS)
+            {
+                relayState[job.relayIndex] = job.state;
+                digitalWrite(relayPins[job.relayIndex],
+                             job.state ? HIGH : LOW);
+
+                writeRelayState(); // cập nhật client
+            }
+        }
+    }
+}
 
 void handleRelayUpdate(const char *payload)
 {
-    StaticJsonDocument<128> doc; // hoặc JsonDocument doc; nếu dùng ArduinoJson v7+
+    JsonDocument doc;
     DeserializationError error = deserializeJson(doc, payload);
 
     if (error)

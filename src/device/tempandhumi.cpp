@@ -25,7 +25,7 @@ void TaskTempAndHumi(void *pvParameters)
         msg.cmdType = 3; // 3 = SENSOR temp/humi
         msg.Value01 = temperature;
         msg.Value02 = humidity;
-        Serial.printf(msg.cmdType == 3 ? "Temp: %.2f C, Humi: %.2f %%\n" : "", msg.Value01, msg.Value02);
+        // Serial.printf(msg.cmdType == 3 ? "Temp: %.2f C, Humi: %.2f %%\n" : "", msg.Value01, msg.Value02);
         xQueueSendToBack(commandQueue, &msg, 0);
 
         vTaskDelay(pdMS_TO_TICKS(1000));

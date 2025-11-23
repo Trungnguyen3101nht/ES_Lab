@@ -43,6 +43,60 @@
           <p id="relayStatus4">Relay 4 OFF</p>
         </div> -->
       </section>
+ 
+
+      <!-- Schedule -->
+       <section class="card schedule-card">
+  <h1>Relay Scheduler</h1>
+
+  <div class="schedule-form">
+
+    <div class="form-row">
+      <label>Chọn Relay</label>
+      <select id="schRelay">
+        <option value="1">Relay 1</option>
+        <option value="2">Relay 2</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Trạng thái</label>
+      <select id="schState">
+        <option value="true">Bật</option>
+        <option value="false">Tắt</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Thời gian</label>
+      <div style="display:flex; gap:10px;">
+        <input type="number" id="schHour" min="0" max="23" value="6">
+        <input type="number" id="schMinute" min="0" max="59" value="0">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>Ngày trong tuần</label>
+
+      <div class="days-box">
+  <label><input type="checkbox" value="0"> CN</label>
+  <label><input type="checkbox" value="1"> T2</label>
+  <label><input type="checkbox" value="2"> T3</label>
+  <label><input type="checkbox" value="3"> T4</label>
+  <label><input type="checkbox" value="4"> T5</label>
+  <label><input type="checkbox" value="5"> T6</label>
+  <label><input type="checkbox" value="6"> T7</label>
+</div>
+
+    </div>
+
+    <button id="addScheduleBtn" class="btn">Thêm lịch</button>
+  </div>
+
+  <h3>Danh sách lịch</h3>
+  <ul id="scheduleList"></ul>
+</section>
+
 
       <!-- Cột phải -->
       <section class="right-column">

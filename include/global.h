@@ -35,5 +35,6 @@
 #include "D:\DOC\BKUdoc\251\embeddedsys\ESP32\src\common\define.h"
 #include "D:\DOC\BKUdoc\251\embeddedsys\ESP32\src\connect\connect_init.h"
 #include "D:\DOC\BKUdoc\251\embeddedsys\ESP32\src\device\device_init.h"
+#include "D:\DOC\BKUdoc\251\embeddedsys\ESP32\src\task\task_init.h"
 
 #endif

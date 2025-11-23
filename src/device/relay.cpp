@@ -6,17 +6,6 @@ bool relayNewState = false;
 bool relayState[NUM_RELAYS] = {false};
 const int relayPins[NUM_RELAYS] = {Relay_1, Relay_2};
 
-// Schedule
-
-typedef struct
-{
-    int relayIndex;     // Relay nào (0 → NUM_RELAYS-1)
-    bool state;         // Bật / Tắt
-    uint32_t executeAt; // thời điểm thực thi (millis)
-} RelaySchedule;
-
-QueueHandle_t relayScheduleQueue;
-
 // Gửi trạng thái tất cả relay về client
 void writeRelayState()
 {
@@ -30,32 +19,6 @@ void writeRelayState()
     serializeJson(doc, json);
     ws.textAll(json);
 }
-
-void TaskRelayScheduler(void *pvParameters)
-{
-    RelaySchedule job;
-
-    for (;;)
-    {
-        if (xQueueReceive(relayScheduleQueue, &job, pdMS_TO_TICKS(100)))
-        {
-            // chờ đúng thời điểm
-            while (millis() < job.executeAt)
-                vTaskDelay(pdMS_TO_TICKS(50));
-
-            // Thực thi job
-            if (job.relayIndex >= 0 && job.relayIndex < NUM_RELAYS)
-            {
-                relayState[job.relayIndex] = job.state;
-                digitalWrite(relayPins[job.relayIndex],
-                             job.state ? HIGH : LOW);
-
-                writeRelayState(); // cập nhật client
-            }
-        }
-    }
-}
-
 void handleRelayUpdate(const char *payload)
 {
     JsonDocument doc;
@@ -91,17 +54,24 @@ void handleWSMesOfRelay(void *arg, uint8_t *data, size_t len)
 {
     String msg = (char *)data;
 
+    if (msg.startsWith("{"))
+    {
+        JsonDocument doc;
+        deserializeJson(doc, msg);
+
+        addSchedule(doc);
+        return;
+    }
+
     if (msg.startsWith("RELAY"))
     {
-        int index = msg.substring(5, 6).toInt() - 1; // RELAY1 → index = 0
+        int index = msg.substring(5, 6).toInt() - 1;
         if (index >= 0 && index < NUM_RELAYS)
         {
             bool state = msg.endsWith("_ON");
-            relayState[index] = state;
-            relayIndex = index;
-            relayNewState = state;
-            newCommandRelay = true;
-            sendRelayStateToCore(); // 🟢 Gửi trạng thái ban đầu lên Core IOT
+            relayState[index] = state;                          // cập nhật ngay mảng trạng thái
+            digitalWrite(relayPins[index], state ? HIGH : LOW); // bật/tắt ngay
+            writeRelayState();                                  // gửi ngay cho client
 
             Serial.printf("👉 Received %s → Relay %d %s\n", msg.c_str(), index + 1, state ? "ON" : "OFF");
         }

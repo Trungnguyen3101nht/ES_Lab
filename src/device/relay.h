@@ -1,7 +1,7 @@
 #ifndef RELAY_H
 #define RELAY_H
 #include "global.h"
-
+#include "task/schedule.h"
 extern bool relayState[NUM_RELAYS];
 extern const int relayPins[NUM_RELAYS];
 

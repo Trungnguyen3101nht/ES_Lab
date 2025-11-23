@@ -30,18 +30,30 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     if (type == WS_EVT_DATA)
     {
         AwsFrameInfo *info = (AwsFrameInfo *)arg;
-        if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
+        if (info->final && info->index == 0 && info->opcode == WS_TEXT)
         {
-            data[len] = 0;
-            String message = (char *)data;
+            String message;
+            for (size_t i = 0; i < len; i++)
+                message += (char)data[i];
 
-            // Serial.print("Received: ");
-            // Serial.println(message);
-            // if (message.startsWith("LED"))
-            // {
-            //     handleWSMesOfLED(arg, data, len);
-            // }
-            if (message.startsWith("RELAY"))
+            Serial.print("📥 Received WS: ");
+            Serial.println(message);
+
+            if (message.startsWith("{"))
+            {
+                DynamicJsonDocument doc(512);
+                DeserializationError error = deserializeJson(doc, message);
+                if (error)
+                {
+                    Serial.print("❌ JSON parse failed: ");
+                    Serial.println(error.c_str());
+                }
+                else
+                {
+                    addSchedule(doc);
+                }
+            }
+            else if (message.startsWith("RELAY"))
             {
                 handleWSMesOfRelay(arg, data, len);
             }

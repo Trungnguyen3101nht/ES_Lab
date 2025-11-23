@@ -137,3 +137,131 @@ input:checked + .slider:before {
   flex-direction: column;
   gap: 30px;
 }
+/* ===== Schedule Card (ĐỒNG BỘ VỚI CÁC CARD KHÁC) ===== */
+.schedule-card {
+  background: var(--card-color);
+  padding: 30px 40px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  width: 350px;
+  text-align: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.schedule-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+}
+
+.schedule-card h1 {
+  color: var(--accent);
+  margin-bottom: 20px;
+}
+
+.schedule-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.schedule-card label {
+  font-size: 0.95rem;
+  color: #ddd;
+  font-weight: 500;
+}
+
+.schedule-card select,
+.schedule-card input[type="number"] {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  width: 100%;
+}
+
+.schedule-card .form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* DAYS checkbox */
+.days-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.days-box label {
+  background: #2a2a2a;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.days-box input {
+  display: none;
+}
+
+.days-box label.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.schedule-card .btn {
+  background-color: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  width: 150px;
+  margin: auto;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.schedule-card .btn:hover {
+  background-color: #00b0b0;
+}
+
+/* Schedule List đồng bộ style */
+.schedule-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  margin-top: 15px;
+}
+
+.schedule-card li {
+  background: #2a2a2a;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #e0e0e0;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.schedule-card li button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.schedule-card li button:hover {
+  background: #00b0b0;
+}

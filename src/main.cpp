@@ -12,8 +12,8 @@ void setup()
 
   Connect_Init();
   Device_Init();
+  Task_Init();
 }
-
 void loop()
 {
   Serial.println(WiFi.localIP());

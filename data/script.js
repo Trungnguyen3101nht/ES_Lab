@@ -78,7 +78,6 @@ function sendCommand(cmd) {
     }
 }
 
-// Xử lý danh sách lịch từ ESP32
 function handleScheduleList(data) {
     const list = document.getElementById("scheduleList");
     if(!list) return;
@@ -93,7 +92,9 @@ function handleScheduleList(data) {
         delBtn.textContent = "Xóa";
         delBtn.onclick = () => {
             ws.send(JSON.stringify({ deleteSchedule: i }));
+            li.remove(); 
         };
+
 
         li.appendChild(delBtn);
         list.appendChild(li);
